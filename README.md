@@ -73,6 +73,10 @@ Sets a document to be presented in real time in the terminal above all coming lo
 
 Updates a document that is already being presented in the terminal. [Descriptor](https://github.com/universal-packages/universal-terminal-document?tab=readme-ov-file#descriptor) for more information.
 
+#### `updateDocumentBlocks(id: string, blockId: string, descriptor: BlockDescriptor)`
+
+Updates a block in a document that is already being presented in the terminal. Check [Block update](https://github.com/universal-packages/universal-terminal-document?tab=readme-ov-file#updateid-string-block-object) for more information.
+
 #### `removeDocument(id: string)`
 
 Removes a document and stops presenting it in the terminal.

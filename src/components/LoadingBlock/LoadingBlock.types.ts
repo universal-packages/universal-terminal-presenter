@@ -2,7 +2,7 @@ import { BlockController } from '../../types'
 
 export type LoadingStatus = 'loading' | 'complete' | 'error' | 'warning'
 export type LoadingStyle = 'star' | 'square' | 'circle'
-export type LoadingSide = 'left' | 'right'
+export type LoadingSide = 'left' | 'right' | 'none'
 
 export interface LoadingBlockOptions {
   style?: LoadingStyle

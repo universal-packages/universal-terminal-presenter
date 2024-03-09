@@ -76,6 +76,14 @@ export default class TerminalPresenter {
     this.documents[id] = this.generateDocumentEntry(presenterDocument, documentEntry.terminalDocument)
   }
 
+  public updateDocumentBlock(id: string, blockId: string, blockDescriptor: BlockDescriptor): void {
+    const documentEntry = this.documents[id]
+
+    if (!documentEntry) return
+
+    documentEntry.terminalDocument.update(blockId, blockDescriptor)
+  }
+
   public removeDocument(id: string): void {
     this.documentsOrder = this.documentsOrder.filter((entry) => entry !== id)
     delete this.documents[id]
@@ -115,28 +123,28 @@ export default class TerminalPresenter {
         }
       }
 
-      if (this.documentsOrder.length === 0) return
+      if (this.documentsOrder.length > 0) {
+        const lines = this.documentsOrder.map((entry): string[] => this.documents[entry].terminalDocument.result.split('\n')).flat()
 
-      const lines = this.documentsOrder.map((entry): string[] => this.documents[entry].terminalDocument.result.split('\n')).flat()
+        for (let i = 0; i < lines.length; i++) {
+          const currentLine = lines[i]
+          const previousLine = previousLines[i]
 
-      for (let i = 0; i < lines.length; i++) {
-        const currentLine = lines[i]
-        const previousLine = previousLines[i]
-
-        if (currentLine !== previousLine || wereLogs) {
-          writeStdout(ansiEscapes.eraseLine)
-          writeStdout(currentLine)
-          if (i !== lines.length - 1) writeStdout('\n')
-        } else {
-          if (i !== lines.length - 1) writeStdout(ansiEscapes.cursorMove(0, 1))
+          if (currentLine !== previousLine || wereLogs) {
+            writeStdout(ansiEscapes.eraseLine)
+            writeStdout(currentLine)
+            if (i !== lines.length - 1) writeStdout('\n')
+          } else {
+            if (i !== lines.length - 1) writeStdout(ansiEscapes.cursorMove(0, 1))
+          }
         }
+
+        if (lines.length < previousLines.length) writeStdout(ansiEscapes.eraseDown)
+
+        writeStdout(ansiEscapes.cursorMove(-999, -lines.length + 1))
+
+        previousLines = lines
       }
-
-      if (lines.length < previousLines.length) writeStdout(ansiEscapes.eraseDown)
-
-      writeStdout(ansiEscapes.cursorMove(-999, -lines.length + 1))
-
-      previousLines = lines
 
       this.frame++
 
