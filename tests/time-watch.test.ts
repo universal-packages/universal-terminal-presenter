@@ -14,7 +14,7 @@ jest.mock('ansi-escapes', () => ({
   cursorShow: 'cursorShow'
 }))
 
-process.stdout.columns = 80
+process.stdout.columns = 60
 
 jest.useFakeTimers()
 
@@ -40,35 +40,35 @@ describe(TerminalPresenter, (): void => {
 
     jest.advanceTimersToNextTimer()
 
-    expect(writeStdoutMock.mock.calls.map((call) => ansiStrip(call[0]))).toEqual(['eraseLine', '00s                                             ', 'cursorMove(-999,0)'])
+    expect(writeStdoutMock.mock.calls.map((call) => ansiStrip(call[0]))).toEqual(['eraseLine', '00s                                                         ', 'cursorMove(-999,0)'])
     jest.clearAllMocks()
 
     Date.now = () => 1000
 
     jest.advanceTimersToNextTimer()
 
-    expect(writeStdoutMock.mock.calls.map((call) => ansiStrip(call[0]))).toEqual(['eraseLine', '01s                                             ', 'cursorMove(-999,0)'])
+    expect(writeStdoutMock.mock.calls.map((call) => ansiStrip(call[0]))).toEqual(['eraseLine', '01s                                                         ', 'cursorMove(-999,0)'])
     jest.clearAllMocks()
 
     Date.now = () => 1000 * 60 + 5000
 
     jest.advanceTimersToNextTimer()
 
-    expect(writeStdoutMock.mock.calls.map((call) => ansiStrip(call[0]))).toEqual(['eraseLine', '01m 05s                                         ', 'cursorMove(-999,0)'])
+    expect(writeStdoutMock.mock.calls.map((call) => ansiStrip(call[0]))).toEqual(['eraseLine', '01m 05s                                                     ', 'cursorMove(-999,0)'])
     jest.clearAllMocks()
 
     Date.now = () => 1000 * 60 * 60 + 1000 * 60 * 8 + 5000
 
     jest.advanceTimersToNextTimer()
 
-    expect(writeStdoutMock.mock.calls.map((call) => ansiStrip(call[0]))).toEqual(['eraseLine', '01h 08m 05s                                     ', 'cursorMove(-999,0)'])
+    expect(writeStdoutMock.mock.calls.map((call) => ansiStrip(call[0]))).toEqual(['eraseLine', '01h 08m 05s                                                 ', 'cursorMove(-999,0)'])
     jest.clearAllMocks()
 
     Date.now = () => 1000 * 60 * 60 * 24 + 1000 * 60 * 60 + 1000 * 60 * 8 + 5000
 
     jest.advanceTimersToNextTimer()
 
-    expect(writeStdoutMock.mock.calls.map((call) => ansiStrip(call[0]))).toEqual(['eraseLine', '01d 01h 08m 05s                                 ', 'cursorMove(-999,0)'])
+    expect(writeStdoutMock.mock.calls.map((call) => ansiStrip(call[0]))).toEqual(['eraseLine', '01d 01h 08m 05s                                             ', 'cursorMove(-999,0)'])
 
     terminalPresenter.stop()
     jest.advanceTimersToNextTimer()
@@ -91,42 +91,42 @@ describe(TerminalPresenter, (): void => {
 
     jest.advanceTimersToNextTimer()
 
-    expect(writeStdoutMock.mock.calls.map((call) => ansiStrip(call[0]))).toEqual(['eraseLine', '01d 01h 08m 05s                                 ', 'cursorMove(-999,0)'])
+    expect(writeStdoutMock.mock.calls.map((call) => ansiStrip(call[0]))).toEqual(['eraseLine', '01d 01h 08m 05s                                             ', 'cursorMove(-999,0)'])
     jest.clearAllMocks()
 
     Date.now = () => 1000
 
     jest.advanceTimersToNextTimer()
 
-    expect(writeStdoutMock.mock.calls.map((call) => ansiStrip(call[0]))).toEqual(['eraseLine', '01d 01h 08m 04s                                 ', 'cursorMove(-999,0)'])
+    expect(writeStdoutMock.mock.calls.map((call) => ansiStrip(call[0]))).toEqual(['eraseLine', '01d 01h 08m 04s                                             ', 'cursorMove(-999,0)'])
     jest.clearAllMocks()
 
     Date.now = () => 1000 * 60 + 5000
 
     jest.advanceTimersToNextTimer()
 
-    expect(writeStdoutMock.mock.calls.map((call) => ansiStrip(call[0]))).toEqual(['eraseLine', '01d 01h 07m                                     ', 'cursorMove(-999,0)'])
+    expect(writeStdoutMock.mock.calls.map((call) => ansiStrip(call[0]))).toEqual(['eraseLine', '01d 01h 07m                                                 ', 'cursorMove(-999,0)'])
     jest.clearAllMocks()
 
     Date.now = () => 1000 * 60 * 60 + 1000 * 60 * 8
 
     jest.advanceTimersToNextTimer()
 
-    expect(writeStdoutMock.mock.calls.map((call) => ansiStrip(call[0]))).toEqual(['eraseLine', '01d 05s                                         ', 'cursorMove(-999,0)'])
+    expect(writeStdoutMock.mock.calls.map((call) => ansiStrip(call[0]))).toEqual(['eraseLine', '01d 05s                                                     ', 'cursorMove(-999,0)'])
     jest.clearAllMocks()
 
     Date.now = () => 1000 * 60 * 60 * 24 + 1000 * 60 * 60 + 1000 * 60 * 8
 
     jest.advanceTimersToNextTimer()
 
-    expect(writeStdoutMock.mock.calls.map((call) => ansiStrip(call[0]))).toEqual(['eraseLine', '05s                                             ', 'cursorMove(-999,0)'])
+    expect(writeStdoutMock.mock.calls.map((call) => ansiStrip(call[0]))).toEqual(['eraseLine', '05s                                                         ', 'cursorMove(-999,0)'])
     jest.clearAllMocks()
 
     Date.now = () => 1000 * 60 * 60 * 24 + 1000 * 60 * 60 + 1000 * 60 * 8 + 5000
 
     jest.advanceTimersToNextTimer()
 
-    expect(writeStdoutMock.mock.calls.map((call) => ansiStrip(call[0]))).toEqual(['eraseLine', '00s                                             ', 'cursorMove(-999,0)'])
+    expect(writeStdoutMock.mock.calls.map((call) => ansiStrip(call[0]))).toEqual(['eraseLine', '00s                                                         ', 'cursorMove(-999,0)'])
     jest.clearAllMocks()
 
     Date.now = () => 1000 * 60 * 60 * 24 + 1000 * 60 * 60 + 1000 * 60 * 8 + 45645489745

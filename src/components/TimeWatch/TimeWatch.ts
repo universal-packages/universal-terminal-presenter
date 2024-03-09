@@ -16,7 +16,7 @@ export function TimeWatch(options?: TimeWatchOptions): TimeWatchController {
   let configuration: BlockControllerConfiguration
 
   return {
-    descriptor: { id, text: '', style: 'bold', width: 'fit' },
+    descriptor: { id, text: '00s', style: 'bold', width: 'fit' },
     requestUpdate: () => {
       const currentTime = Date.now()
       let timeDiff: number
@@ -36,7 +36,7 @@ export function TimeWatch(options?: TimeWatchOptions): TimeWatchController {
         seconds % 60 || !hasPrecedent ? `${padZero(seconds % 60)}s` : ''
       }`
       if (time !== lastCalculatedTime) {
-        configuration.update(id, { color: BlueColor.DodgerBlue, text: time })
+        configuration.update(id, { text: time })
         lastCalculatedTime = time
       }
     },
