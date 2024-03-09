@@ -36,7 +36,7 @@ describe(TerminalPresenter, (): void => {
 
     expect(writeStdoutMock.mock.calls.map((call) => ansiStrip(call[0]))).toEqual([
       'eraseLine',
-      '⣷ |---------------------------------------------------------------------| 0.00 %',
+      '⣷|----------------------------------------------------------------------| 0.00 %',
       'cursorMove(-999,0)'
     ])
     jest.advanceTimersToNextTimer()
@@ -46,7 +46,7 @@ describe(TerminalPresenter, (): void => {
 
     expect(writeStdoutMock.mock.calls.map((call) => ansiStrip(call[0]))).toEqual([
       'eraseLine',
-      '⣯ |---------------------------------------------------------------------| 0.00 %',
+      '⣯|----------------------------------------------------------------------| 0.00 %',
       'cursorMove(-999,0)'
     ])
     jest.clearAllMocks()
@@ -58,7 +58,7 @@ describe(TerminalPresenter, (): void => {
 
     expect(writeStdoutMock.mock.calls.map((call) => ansiStrip(call[0]))).toEqual([
       'eraseLine',
-      '✔ |██████████████████████████████████▏---------------------------------| 50.00 %',
+      '✔|██████████████████████████████████▋----------------------------------| 50.00 %',
       'cursorMove(-999,0)'
     ])
     jest.clearAllMocks()
@@ -70,7 +70,7 @@ describe(TerminalPresenter, (): void => {
 
     expect(writeStdoutMock.mock.calls.map((call) => ansiStrip(call[0]))).toEqual([
       'eraseLine',
-      '⚠ |████████████████████████████████████████████████████████████▎-------| 88.50 %',
+      '⚠|█████████████████████████████████████████████████████████████▎-------| 88.50 %',
       'cursorMove(-999,0)'
     ])
     jest.clearAllMocks()
@@ -82,7 +82,7 @@ describe(TerminalPresenter, (): void => {
 
     expect(writeStdoutMock.mock.calls.map((call) => ansiStrip(call[0]))).toEqual([
       'eraseLine',
-      '✖ |███████████████████████████████████████████████████████████████████| 100.00 %',
+      '✖|████████████████████████████████████████████████████████████████████| 100.00 %',
       'cursorMove(-999,0)'
     ])
 

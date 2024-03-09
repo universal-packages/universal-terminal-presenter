@@ -13,10 +13,9 @@ const LOAD_CHARS = {
 }
 
 export function LoadingBlock(options?: LoadingBlockOptions): LoadingController {
-  const finalOptions: LoadingBlockOptions = { style: 'square', speed: 1, side: 'left', ...options }
+  const finalOptions: LoadingBlockOptions = { style: 'square', speed: 1, ...options }
   const animationChars = LOAD_CHARS[finalOptions.style]
   const speedIndex = Math.max(finalOptions.speed, 0) || 1
-  const padding: Padding = finalOptions.side === 'left' ? [0, 1, 0, 0] : finalOptions.side === 'right' ? [0, 0, 0, 1] : undefined
   let status: LoadingStatus = 'loading'
   let lastFrameChar = animationChars[0]
 
@@ -25,7 +24,7 @@ export function LoadingBlock(options?: LoadingBlockOptions): LoadingController {
   let configuration: BlockControllerConfiguration
 
   return {
-    descriptor: { id, text: animationChars[0], padding, style: 'bold', width: 'fit' },
+    descriptor: { id, text: animationChars[0], style: 'bold', width: 'fit' },
     requestUpdate: (frame: number, framesPerSecond: number) => {
       if (status !== 'loading') return
 
