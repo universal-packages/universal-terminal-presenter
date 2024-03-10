@@ -289,7 +289,7 @@ export default class TerminalPresenter {
     const caller = matchType1 ? chalk.cyan(matchType1[1]) : ''
     const pathParts = matchType1 ? chalk.dim(matchType1[2]).split('/') : chalk.dim(matchType2[1]).split('/')
 
-    pathParts[pathParts.length - 1] = chalk.cyan(pathParts[pathParts.length - 1])
+    pathParts[pathParts.length - 1] = chalk.reset.cyan(pathParts[pathParts.length - 1])
 
     return { args, type, typeFormatted, caller, path: pathParts.join('/') }
   }
