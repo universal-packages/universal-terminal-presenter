@@ -1,5 +1,3 @@
-import { BlueColor } from '@universal-packages/terminal-document'
-
 import { BlockControllerConfiguration } from '../../types'
 import { TimeWatchController, TimeWatchOptions } from './TimeWatch.types'
 
@@ -22,7 +20,15 @@ export function TimeWatch(options?: TimeWatchOptions): TimeWatchController {
       let timeDiff: number
 
       if (targetTime) {
-        timeDiff = Math.max(targetTime - currentTime, 0)
+        if (initialTime) {
+          if (currentTime > targetTime) {
+            timeDiff = Math.max(targetTime - initialTime, 0)
+          } else {
+            timeDiff = Math.max(targetTime - currentTime, 0)
+          }
+        } else {
+          timeDiff = Math.max(targetTime - currentTime, 0)
+        }
       } else {
         timeDiff = currentTime - initialTime
       }
