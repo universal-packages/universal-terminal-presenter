@@ -1,5 +1,4 @@
-import { BlockDescriptor, BlueColor, GreenColor, RedColor, YellowColor } from '@universal-packages/terminal-document'
-import { Padding } from '@universal-packages/text-wrap'
+import { BlueColor, GreenColor, RedColor, YellowColor } from '@universal-packages/terminal-document'
 
 import { BlockControllerConfiguration } from '../../types'
 import { LoadingBlockOptions, LoadingController, LoadingStatus } from './LoadingBlock.types'
@@ -13,18 +12,29 @@ const LOAD_CHARS = {
 }
 
 export function LoadingBlock(options?: LoadingBlockOptions): LoadingController {
-  const finalOptions: LoadingBlockOptions = { style: 'square', speed: 1, ...options }
+  const finalOptions: LoadingBlockOptions = { style: 'square', speed: 1, status: 'loading', ...options }
   const animationChars = LOAD_CHARS[finalOptions.style]
   const speedIndex = Math.max(finalOptions.speed, 0) || 1
-  let status: LoadingStatus = 'loading'
+  let status: LoadingStatus = finalOptions.status
   let lastFrameChar = animationChars[0]
 
   const id = `loading-component-${ID++}`
+  const initialText = status === 'loading' ? animationChars[0] : status === 'complete' ? '✔' : status === 'error' ? '✖' : status === 'warning' ? '⚠' : ''
+  const initialColor =
+    status === 'loading'
+      ? BlueColor.DodgerBlue
+      : status === 'complete'
+      ? GreenColor.LimeGreen
+      : status === 'error'
+      ? RedColor.FireBrick
+      : status === 'warning'
+      ? YellowColor.Gold
+      : undefined
 
   let configuration: BlockControllerConfiguration
 
   return {
-    descriptor: { id, text: animationChars[0], style: 'bold', width: 'fit' },
+    descriptor: { id, color: initialColor, text: initialText, style: 'bold', width: 'fit' },
     requestUpdate: (frame: number, framesPerSecond: number) => {
       if (status !== 'loading') return
 

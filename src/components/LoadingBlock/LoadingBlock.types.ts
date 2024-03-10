@@ -6,6 +6,7 @@ export type LoadingStyle = 'star' | 'square' | 'circle'
 export interface LoadingBlockOptions {
   style?: LoadingStyle
   speed?: number
+  status?: LoadingStatus
 }
 
 export interface LoadingController extends BlockController {
