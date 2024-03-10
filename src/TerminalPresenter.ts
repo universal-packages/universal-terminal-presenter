@@ -283,9 +283,11 @@ export default class TerminalPresenter {
 
   private generateLogEntry(type: string, typeFormatted: string, args: any[]): LogBufferEntry {
     const stackLine = new Error().stack.split('\n')[3]
-    const match = /at (.*) \((.*)\)/g.exec(stackLine)
-    const caller = chalk.cyan(match[1])
-    const pathParts = chalk.gray(match[2]).split('/')
+    const matchType1 = /at (.*) \((.*)\)/g.exec(stackLine)
+    const matchType2 = /at (.*)/g.exec(stackLine)
+
+    const caller = matchType1 ? chalk.cyan(matchType1[1]) : ''
+    const pathParts = matchType1 ? chalk.dim(matchType1[2]).split('/') : chalk.dim(matchType2[1]).split('/')
 
     pathParts[pathParts.length - 1] = chalk.cyan(pathParts[pathParts.length - 1])
 
@@ -295,7 +297,7 @@ export default class TerminalPresenter {
   private printConsoleEntry(logEntry: LogBufferEntry): void {
     if (this.options.decorateConsole) {
       this.originalConsoleMethods.log(chalk.dim('console.') + logEntry.typeFormatted)
-      this.originalConsoleMethods.log('  ', logEntry.caller, logEntry.path)
+      this.originalConsoleMethods.log(chalk.dim('at'), logEntry.caller, logEntry.path)
     }
 
     this.originalConsoleMethods[logEntry.type](...logEntry.args)

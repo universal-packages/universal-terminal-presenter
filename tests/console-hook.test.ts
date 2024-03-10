@@ -20,7 +20,7 @@ describe(TerminalPresenter, (): void => {
     const calls = logSpy.mock.calls.map((call) => stripAnsi(call.join(' ')))
 
     expect(calls[0]).toBe('console.log')
-    expect(calls[1]).toMatch(/   Object.<anonymous>.*tests\/console-hook.test.ts:16:13/)
+    expect(calls[1]).toMatch(/at Object.<anonymous>.*tests\/console-hook.test.ts:16:13/)
     expect(calls[2]).toBe('This is a test message')
     expect(calls[3]).toBe('')
 
