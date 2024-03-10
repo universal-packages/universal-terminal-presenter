@@ -16,7 +16,7 @@
     "update-dependents": "umaintenance update-dependents"
   },
   "dependencies": {
-    "@universal-packages/terminal-document": "^1.2.0",
+    "@universal-packages/terminal-document": "^1.2.1",
     "ansi-escapes": "^4.3.2"
   },
   "devDependencies": {
