@@ -28,6 +28,8 @@ describe(TerminalPresenter, (): void => {
 
     terminalPresenter.log('This is another test message')
 
+    jest.advanceTimersToNextTimer()
+
     expect(logSpy).toHaveBeenCalledTimes(1)
     expect(logSpy).toHaveBeenCalledWith('This is another test message')
   })

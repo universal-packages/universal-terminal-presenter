@@ -61,6 +61,10 @@ Starts the terminal presenter. This will start presenting all documents and hook
 
 Stops the terminal presenter. This will stop presenting all documents and unhook from the console.
 
+#### `log([...args])`
+
+Use this to print anything above the real time documents. This will be printed directly and will not be captured the same as console.log ones.
+
 #### `appendDocument(id: string, descriptor: Descriptor)`
 
 Sets a document to be presented in real time in the terminal below all coming logs and after all other presented documents. See [Descriptor](https://github.com/universal-packages/universal-terminal-document?tab=readme-ov-file#descriptor) for more information.

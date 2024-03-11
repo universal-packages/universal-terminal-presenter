@@ -51,7 +51,7 @@ export default class TerminalPresenter {
   }
 
   public log(...args: any[]): void {
-    this.originalConsoleMethods.log(...args)
+    this.logBuffer.push({ args, type: 'log' })
   }
 
   public appendDocument(id: string, presenterDocument: PresenterDocumentDescriptor): void {
@@ -295,14 +295,14 @@ export default class TerminalPresenter {
   }
 
   private printConsoleEntry(logEntry: LogBufferEntry): void {
-    if (this.options.decorateConsole) {
+    if (this.options.decorateConsole && logEntry.typeFormatted) {
       this.originalConsoleMethods.log(chalk.dim('console.') + logEntry.typeFormatted)
       this.originalConsoleMethods.log(chalk.dim('at'), logEntry.caller, logEntry.path)
     }
 
     this.originalConsoleMethods[logEntry.type](...logEntry.args)
 
-    if (this.options.decorateConsole) this.originalConsoleMethods.log('')
+    if (this.options.decorateConsole && logEntry.typeFormatted) this.originalConsoleMethods.log('')
   }
 
   private terminalColumns(): number {
