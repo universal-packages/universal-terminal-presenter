@@ -106,11 +106,9 @@ export default class TerminalPresenter {
       if (this.logBuffer.length > 0) {
         writeStdout(ansiEscapes.eraseDown)
 
-        while (this.logBuffer.length > 0) {
-          const logEntry = this.logBuffer.shift()
+        const logEntry = this.logBuffer.shift()
 
-          this.printConsoleEntry(logEntry)
-        }
+        this.printConsoleEntry(logEntry)
 
         wereLogs = true
       }
