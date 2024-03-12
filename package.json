@@ -10,7 +10,7 @@
   "scripts": {
     "build": "tsc --p tsconfig.dis.json",
     "test": "jest --watch",
-    "test:full": "jest --coverage --verbose --runInBand",
+    "test:full": "jest --coverage --verbose",
     "test:clear": "jest --clearCache",
     "format": "prettier --write \"./{src,tests}/**/*.{ts,tsx,js,jsx,json}\"",
     "update-dependents": "umaintenance update-dependents"

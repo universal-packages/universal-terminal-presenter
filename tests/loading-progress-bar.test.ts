@@ -17,20 +17,26 @@ process.stdout.columns = 80
 
 jest.useFakeTimers()
 
+const writeStdoutMock = writeStdout as jest.Mock
+
+afterEach((): void => {
+  TerminalPresenter.stop()
+  jest.advanceTimersToNextTimer()
+
+  writeStdoutMock.mockClear()
+})
+
 describe(TerminalPresenter, (): void => {
   it('present components that can be animated', async (): Promise<void> => {
-    const writeStdoutMock = writeStdout as jest.Mock
-
-    const terminalPresenter = new TerminalPresenter()
     const loadingBlock = LoadingBlock()
     const progressBar = ProgressBar()
 
-    terminalPresenter.start()
+    TerminalPresenter.start()
 
-    terminalPresenter.appendDocument('document-1', { rows: [{ blocks: [loadingBlock, progressBar] }] })
+    TerminalPresenter.appendDocument('document-1', { rows: [{ blocks: [loadingBlock, progressBar] }] })
 
     expect(writeStdoutMock.mock.calls).toEqual([['cursorHide']])
-    jest.clearAllMocks()
+    writeStdoutMock.mockClear()
 
     jest.advanceTimersToNextTimer()
 
@@ -40,7 +46,7 @@ describe(TerminalPresenter, (): void => {
       'cursorMove(-999,0)'
     ])
     jest.advanceTimersToNextTimer()
-    jest.clearAllMocks()
+    writeStdoutMock.mockClear()
 
     jest.advanceTimersToNextTimer()
 
@@ -49,7 +55,7 @@ describe(TerminalPresenter, (): void => {
       '⣯|----------------------------------------------------------------------| 0.00 %',
       'cursorMove(-999,0)'
     ])
-    jest.clearAllMocks()
+    writeStdoutMock.mockClear()
 
     loadingBlock.setStatus('complete')
     progressBar.setProgress(50)
@@ -61,7 +67,7 @@ describe(TerminalPresenter, (): void => {
       '✔|██████████████████████████████████▋----------------------------------| 50.00 %',
       'cursorMove(-999,0)'
     ])
-    jest.clearAllMocks()
+    writeStdoutMock.mockClear()
 
     loadingBlock.setStatus('warning')
     progressBar.setProgress(88.5)
@@ -73,7 +79,7 @@ describe(TerminalPresenter, (): void => {
       '⚠|█████████████████████████████████████████████████████████████▎-------| 88.50 %',
       'cursorMove(-999,0)'
     ])
-    jest.clearAllMocks()
+    writeStdoutMock.mockClear()
 
     loadingBlock.setStatus('error')
     progressBar.setProgress(100)

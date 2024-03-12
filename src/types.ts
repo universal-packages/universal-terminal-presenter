@@ -30,10 +30,10 @@ export interface DocumentEntry {
   controllers: BlockController[]
 }
 
-export interface LogBufferEntry {
-  args: any[]
-  type: string
-  typeFormatted?: string
+export interface StdoutWriteAttemptEntry {
   caller?: string
-  path?: string
+  direct?: boolean
+  line?: string
+  printer?: string
+  subject: string
 }

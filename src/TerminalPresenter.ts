@@ -2,81 +2,65 @@ import { BlockDescriptor, TerminalDocument } from '@universal-packages/terminal-
 import ansiEscapes from 'ansi-escapes'
 import chalk from 'chalk'
 
-import { BlockController, DocumentEntry, LogBufferEntry, PresenterDocumentDescriptor, TerminalPresenterOptions } from './types'
+import { STDOUT_WRITE_ATTEMPTS, captureStdoutWrite, pushStdoutWriteAttempt, releaseStdoutWrite } from './captureStdout'
+import { getTerminalColumns } from './getTerminalColumns'
+import { BlockController, DocumentEntry, PresenterDocumentDescriptor, TerminalPresenterOptions } from './types'
 import { writeStdout } from './writeStdout'
 
+const DECORATION_COLORS = {
+  info: chalk.blue,
+  warn: chalk.yellow,
+  error: chalk.red
+}
+
 export default class TerminalPresenter {
-  public readonly options: TerminalPresenterOptions
+  private static options: TerminalPresenterOptions = { clear: false, decorateConsole: true, framesPerSecond: 30 }
 
-  private interval: NodeJS.Timeout
+  private static documents: Record<string, DocumentEntry> = {}
+  private static documentsOrder: string[] = []
 
-  private documents: Record<string, DocumentEntry> = {}
-  private documentsOrder: string[] = []
+  private static framesPerSecond = 30
+  private static frameDuration = 1000 / this.framesPerSecond
+  private static animationInterval: NodeJS.Timeout
+  private static frame = 0
 
-  private logBuffer: LogBufferEntry[] = []
-  private originalConsoleMethods: Record<string, Function> = {
-    log: console.log,
-    error: console.error,
-    warn: console.warn,
-    info: console.info,
-    debug: console.debug,
-    trace: console.trace,
-    group: console.group,
-    groupCollapsed: console.groupCollapsed,
-    groupEnd: console.groupEnd,
-    table: console.table,
-    time: console.time,
-    timeLog: console.timeLog,
-    timeEnd: console.timeEnd,
-    count: console.count,
-    assert: console.assert,
-    clear: console.clear,
-    dir: console.dir,
-    dirxml: console.dirxml,
-    profile: console.profile,
-    profileEnd: console.profileEnd
-  }
+  private static presenting = false
+  private static stopping = false
 
-  private famesPerSecond = 30
-  private frameDuration = 1000 / this.famesPerSecond
-  private frame = 0
-  private stopping = false
-  private running = false
-
-  public constructor(options?: TerminalPresenterOptions) {
+  public static configure(options?: TerminalPresenterOptions): void {
     this.options = { clear: false, decorateConsole: true, framesPerSecond: 30, ...options }
 
-    this.famesPerSecond = this.options.framesPerSecond
-    this.frameDuration = 1000 / this.famesPerSecond
+    this.framesPerSecond = this.options.framesPerSecond
+    this.frameDuration = 1000 / this.framesPerSecond
   }
 
-  public log(...args: any[]): void {
-    this.logBuffer.push({ args, type: 'log' })
+  public static print(subject: string): void {
+    pushStdoutWriteAttempt(subject)
   }
 
-  public appendDocument(id: string, presenterDocument: PresenterDocumentDescriptor): void {
+  public static appendDocument(id: string, presenterDocument: PresenterDocumentDescriptor): void {
     if (this.documents[id]) return
 
-    this.documents[id] = this.generateDocumentEntry(presenterDocument)
+    this.documents[id] = this.generateTerminalDocumentEntry(presenterDocument)
     this.documentsOrder.push(id)
   }
 
-  public prependDocument(id: string, presenterDocument: PresenterDocumentDescriptor): void {
+  public static prependDocument(id: string, presenterDocument: PresenterDocumentDescriptor): void {
     if (this.documents[id]) return
 
-    this.documents[id] = this.generateDocumentEntry(presenterDocument)
+    this.documents[id] = this.generateTerminalDocumentEntry(presenterDocument)
     this.documentsOrder.unshift(id)
   }
 
-  public updateDocument(id: string, presenterDocument: PresenterDocumentDescriptor): void {
+  public static updateDocument(id: string, presenterDocument: PresenterDocumentDescriptor): void {
     const documentEntry = this.documents[id]
 
     if (!documentEntry) return
 
-    this.documents[id] = this.generateDocumentEntry(presenterDocument, documentEntry.terminalDocument)
+    this.documents[id] = this.generateTerminalDocumentEntry(presenterDocument)
   }
 
-  public updateDocumentBlock(id: string, blockId: string, blockDescriptor: BlockDescriptor): void {
+  public static updateDocumentBlock(id: string, blockId: string, blockDescriptor: BlockDescriptor): void {
     const documentEntry = this.documents[id]
 
     if (!documentEntry) return
@@ -84,40 +68,29 @@ export default class TerminalPresenter {
     documentEntry.terminalDocument.update(blockId, blockDescriptor)
   }
 
-  public removeDocument(id: string): void {
+  public static removeDocument(id: string): void {
     this.documentsOrder = this.documentsOrder.filter((entry) => entry !== id)
     delete this.documents[id]
   }
 
-  public start(): void {
-    if (this.running) return
-    this.running = true
+  public static start(): void {
+    if (this.presenting) return
+    this.presenting = true
 
-    this.hook()
+    this.captureOutput()
+
     if (this.options.clear) writeStdout(ansiEscapes.clearTerminal)
     writeStdout(ansiEscapes.cursorHide)
 
     let previousLines = []
-    this.interval = setInterval(() => {
-      this.running = true
-
-      let wereLogs = false
-
-      if (this.logBuffer.length > 0) {
-        writeStdout(ansiEscapes.eraseDown)
-
-        const logEntry = this.logBuffer.shift()
-
-        this.printConsoleEntry(logEntry)
-
-        wereLogs = true
-      }
+    this.animationInterval = setInterval(() => {
+      const wereLogs = this.printPendingLogs()
 
       for (let i = 0; i < this.documentsOrder.length; i++) {
         const currentEntry = this.documents[this.documentsOrder[i]]
 
         for (let i = 0; i < currentEntry.controllers.length; i++) {
-          currentEntry.controllers[i].requestUpdate(this.frame, this.famesPerSecond, this.frameDuration)
+          currentEntry.controllers[i].requestUpdate(this.frame, this.framesPerSecond, this.frameDuration)
         }
       }
 
@@ -147,86 +120,30 @@ export default class TerminalPresenter {
       this.frame++
 
       if (this.stopping) {
-        clearInterval(this.interval)
+        this.stopping = false
+        this.presenting = false
+
+        this.documents = {}
+        this.documentsOrder = []
+
+        clearInterval(this.animationInterval)
+
+        this.printPendingLogs()
 
         writeStdout(ansiEscapes.eraseDown)
         writeStdout(ansiEscapes.cursorShow)
 
-        this.stopping = false
-        this.running = false
-
-        this.unhook()
+        this.releaseOutput()
       }
     }, this.frameDuration)
   }
 
-  public stop(): void {
-    if (this.running) this.stopping = true
+  public static stop(): void {
+    if (this.stopping) return
+    this.stopping = true
   }
 
-  private hook(): void {
-    this.hookUntoConsoleMethod('log', chalk.dim)
-    this.hookUntoConsoleMethod('error', chalk.red)
-    this.hookUntoConsoleMethod('warn', chalk.yellow)
-    this.hookUntoConsoleMethod('info', chalk.blue)
-    this.hookUntoConsoleMethod('debug', chalk.dim)
-    this.hookUntoConsoleMethod('trace', chalk.dim)
-    this.hookUntoConsoleMethod('group', chalk.dim)
-    this.hookUntoConsoleMethod('groupCollapsed', chalk.dim)
-    this.hookUntoConsoleMethod('groupEnd', chalk.dim)
-    this.hookUntoConsoleMethod('table', chalk.dim)
-    this.hookUntoConsoleMethod('time', chalk.dim)
-    this.hookUntoConsoleMethod('timeLog', chalk.dim)
-    this.hookUntoConsoleMethod('timeEnd', chalk.dim)
-    this.hookUntoConsoleMethod('count', chalk.dim)
-    this.hookUntoConsoleMethod('assert', chalk.dim)
-    this.hookUntoConsoleMethod('clear', chalk.dim)
-    this.hookUntoConsoleMethod('dir', chalk.dim)
-    this.hookUntoConsoleMethod('dirxml', chalk.dim)
-    this.hookUntoConsoleMethod('profile', chalk.dim)
-    this.hookUntoConsoleMethod('profileEnd', chalk.dim)
-
-    process.on('uncaughtException', (e) => {
-      this.originalConsoleMethods.error(e)
-      process.exit(1)
-    })
-
-    process.stdout.on('resize', () => {
-      const documentKeys = Object.keys(this.documents)
-
-      for (let i = 0; i < documentKeys.length; i++) {
-        this.documents[documentKeys[i]].terminalDocument.resize(this.terminalColumns())
-      }
-    })
-  }
-
-  private unhook(): void {
-    this.unhookUntoConsoleMethod('log')
-    this.unhookUntoConsoleMethod('error')
-    this.unhookUntoConsoleMethod('warn')
-    this.unhookUntoConsoleMethod('info')
-    this.unhookUntoConsoleMethod('debug')
-    this.unhookUntoConsoleMethod('trace')
-    this.unhookUntoConsoleMethod('group')
-    this.unhookUntoConsoleMethod('groupCollapsed')
-    this.unhookUntoConsoleMethod('groupEnd')
-    this.unhookUntoConsoleMethod('table')
-    this.unhookUntoConsoleMethod('time')
-    this.unhookUntoConsoleMethod('timeLog')
-    this.unhookUntoConsoleMethod('timeEnd')
-    this.unhookUntoConsoleMethod('count')
-    this.unhookUntoConsoleMethod('assert')
-    this.unhookUntoConsoleMethod('clear')
-    this.unhookUntoConsoleMethod('dir')
-    this.unhookUntoConsoleMethod('dirxml')
-    this.unhookUntoConsoleMethod('profile')
-    this.unhookUntoConsoleMethod('profileEnd')
-
-    process.removeAllListeners('uncaughtException')
-    process.stdout.removeAllListeners('resize')
-  }
-
-  private generateDocumentEntry(presenterDocument: PresenterDocumentDescriptor, terminalDocument?: TerminalDocument): DocumentEntry {
+  private static generateTerminalDocumentEntry(presenterDocument: PresenterDocumentDescriptor): DocumentEntry {
     const { rows: presenterRows, ...options } = presenterDocument
     const rows = []
     const controllers = []
@@ -249,7 +166,7 @@ export default class TerminalPresenter {
       rows.push({ blocks, ...rowDescriptor })
     }
 
-    const terminalDocumentInstance = terminalDocument || new TerminalDocument()
+    const terminalDocumentInstance = new TerminalDocument()
 
     for (let i = 0; i < controllers.length; i++) {
       const component = controllers[i] as BlockController
@@ -264,46 +181,49 @@ export default class TerminalPresenter {
       })
     }
 
-    terminalDocumentInstance.describe({ ...options, rows, width: this.terminalColumns() })
+    terminalDocumentInstance.describe({ ...options, rows, width: getTerminalColumns() })
 
     return { terminalDocument: terminalDocumentInstance, controllers }
   }
 
-  private hookUntoConsoleMethod(method: string, format: chalk.Chalk): void {
-    console[method] = (...args: any[]) => {
-      this.logBuffer.push(this.generateLogEntry(method, format(method), args))
+  private static captureOutput(): void {
+    captureStdoutWrite()
+  }
+
+  private static releaseOutput(): void {
+    releaseStdoutWrite()
+  }
+
+  private static printPendingLogs(): boolean {
+    if (STDOUT_WRITE_ATTEMPTS.length > 0) {
+      const currentEntry = STDOUT_WRITE_ATTEMPTS.shift()
+      let linesToPrint: string[] = []
+
+      if (this.options.decorateConsole && !currentEntry.direct) {
+        const printerParts = currentEntry.printer.split('.')
+        const printerDecorationColor = DECORATION_COLORS[printerParts[0]] || chalk.cyan
+        const decoratedPrinter = `${printerParts[0]}.${printerDecorationColor(printerParts[1])}`
+
+        const decoratedCaller = currentEntry.caller ? chalk.cyan(currentEntry.caller) : ''
+        const lineParts = currentEntry.line.replace(process.cwd() + '/', '').split('/')
+        lineParts[lineParts.length - 1] = chalk.cyan(lineParts[lineParts.length - 1])
+        const atLine = `at ${decoratedCaller} ${lineParts.join('/')}`
+
+        const decorationLine = `${decoratedPrinter} ${atLine}`
+
+        linesToPrint = [decorationLine, ...currentEntry.subject.split('\n')]
+      } else {
+        linesToPrint = currentEntry.subject.split('\n')
+      }
+
+      for (let i = 0; i < linesToPrint.length; i++) {
+        writeStdout(ansiEscapes.eraseLine)
+        writeStdout(linesToPrint[i] + '\n')
+      }
+
+      return true
     }
-  }
 
-  private unhookUntoConsoleMethod(method: string): void {
-    if (this.originalConsoleMethods[method]) console[method] = this.originalConsoleMethods[method]
-  }
-
-  private generateLogEntry(type: string, typeFormatted: string, args: any[]): LogBufferEntry {
-    const stackLine = new Error().stack.split('\n')[3]
-    const matchType1 = /at (.*) \((.*)\)/g.exec(stackLine)
-    const matchType2 = /at (.*)/g.exec(stackLine)
-
-    const caller = matchType1 ? chalk.cyan(matchType1[1]) : ''
-    const pathParts = matchType1 ? chalk.dim(matchType1[2]).split('/') : chalk.dim(matchType2[1]).split('/')
-
-    pathParts[pathParts.length - 1] = chalk.reset.cyan(pathParts[pathParts.length - 1])
-
-    return { args, type, typeFormatted, caller, path: pathParts.join('/') }
-  }
-
-  private printConsoleEntry(logEntry: LogBufferEntry): void {
-    if (this.options.decorateConsole && logEntry.typeFormatted) {
-      this.originalConsoleMethods.log(chalk.dim('console.') + logEntry.typeFormatted)
-      this.originalConsoleMethods.log(chalk.dim('at'), logEntry.caller, logEntry.path)
-    }
-
-    this.originalConsoleMethods[logEntry.type](...logEntry.args)
-
-    if (this.options.decorateConsole && logEntry.typeFormatted) this.originalConsoleMethods.log('')
-  }
-
-  private terminalColumns(): number {
-    return process.stdout.columns || 80
+    return false
   }
 }

@@ -14,14 +14,14 @@ npm install @universal-packages/terminal-presenter
 
 ## TerminalPresenter
 
-Ideally a single terminal presenter should be instantiated and used throughout the application. Once started it hooks into the printing capabilities of the application in order to present real time updates to the terminal.
+Once started it hooks into the printing capabilities of the application in order to present real time updates to the terminal.
 
 ```typescript
 import { TerminalPresenter } from '@universal-packages/terminal-presenter'
 
-const terminalPresenter = new TerminalPresenter()
 
-terminalPresenter.appendDocument('document-1', {
+
+TerminalPresenter.appendDocument('document-1', {
   rows: [
     {
       blocks: [{ text: 'Hello World!!' }]
@@ -29,7 +29,7 @@ terminalPresenter.appendDocument('document-1', {
   ]
 })
 
-terminalPresenter.appendDocument('document-2', {
+TerminalPresenter.appendDocument('document-2', {
   rows: [
     {
       blocks: [{ text: 'Some more real time info' }]
@@ -37,7 +37,7 @@ terminalPresenter.appendDocument('document-2', {
   ]
 })
 
-terminalPresenter.start()
+TerminalPresenter.start()
 ```
 
 ### Options
@@ -51,7 +51,7 @@ terminalPresenter.start()
 - **`framesPerSecond`** `number` `default: 30`
   The amount of frames per second the terminal presenter will try to achieve. There are some optimizations to only render what is necessary so this can in theory be higher than the actual refresh rate of the terminal but after 30 it's not really noticeable.
 
-### Instance Methods
+### Static Methods
 
 #### `start()`
 
@@ -61,7 +61,7 @@ Starts the terminal presenter. This will start presenting all documents and hook
 
 Stops the terminal presenter. This will stop presenting all documents and unhook from the console.
 
-#### `log([...args])`
+#### `print(subject: string)`
 
 Use this to print anything above the real time documents. This will be printed directly and will not be captured the same as console.log ones.
 
