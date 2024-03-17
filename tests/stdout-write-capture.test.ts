@@ -30,6 +30,7 @@ afterEach((): void => {
 
 describe(TerminalPresenter, (): void => {
   it('hooks in the console and decorates the printed console outputs', async (): Promise<void> => {
+    TerminalPresenter.configure({ test: false })
     TerminalPresenter.start()
     jest.advanceTimersToNextTimer()
 
@@ -51,7 +52,7 @@ describe(TerminalPresenter, (): void => {
   })
 
   it('does not decorate the printed console outputs when disabled', async (): Promise<void> => {
-    TerminalPresenter.configure({ decorateConsole: false })
+    TerminalPresenter.configure({ decorateConsole: false, test: false })
     TerminalPresenter.start()
     jest.advanceTimersToNextTimer()
 

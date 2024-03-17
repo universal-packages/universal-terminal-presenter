@@ -14,7 +14,7 @@ const DECORATION_COLORS = {
 }
 
 export default class TerminalPresenter {
-  private static options: TerminalPresenterOptions = { clear: false, decorateConsole: true, framesPerSecond: 30 }
+  private static options: TerminalPresenterOptions = { clear: false, decorateConsole: true, framesPerSecond: 30, test: process.env.NODE_ENV === 'test' }
 
   private static documents: Record<string, DocumentEntry> = {}
   private static documentsOrder: string[] = []
@@ -28,7 +28,7 @@ export default class TerminalPresenter {
   private static stopping = false
 
   public static configure(options?: TerminalPresenterOptions): void {
-    this.options = { clear: false, decorateConsole: true, framesPerSecond: 30, ...options }
+    this.options = { clear: false, decorateConsole: true, framesPerSecond: 30, test: process.env.NODE_ENV === 'test', ...options }
 
     this.framesPerSecond = this.options.framesPerSecond
     this.frameDuration = 1000 / this.framesPerSecond
@@ -76,6 +76,8 @@ export default class TerminalPresenter {
   public static start(): void {
     if (this.presenting) return
     this.presenting = true
+
+    if (this.options.test) return
 
     this.captureOutput()
 
@@ -140,7 +142,12 @@ export default class TerminalPresenter {
 
   public static stop(): void {
     if (this.stopping) return
-    this.stopping = true
+
+    if (this.options.test) {
+      this.presenting = false
+    } else {
+      this.stopping = true
+    }
   }
 
   private static generateTerminalDocumentEntry(presenterDocument: PresenterDocumentDescriptor): DocumentEntry {
