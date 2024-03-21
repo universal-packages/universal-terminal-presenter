@@ -16,9 +16,9 @@ const DECORATION_COLORS = {
 export default class TerminalPresenter {
   private static options: TerminalPresenterOptions = {
     clear: false,
+    enabled: process.stdout.isTTY && process.env.NODE_ENV !== 'test',
     decorateConsole: true,
-    framesPerSecond: 30,
-    printRealTIme: process.stdout.isTTY && process.env.NODE_ENV !== 'test'
+    framesPerSecond: 30
   }
 
   private static documents: Record<string, DocumentEntry> = {}
@@ -33,7 +33,10 @@ export default class TerminalPresenter {
   private static stopping = false
 
   public static configure(options?: TerminalPresenterOptions): void {
-    this.options = { clear: false, decorateConsole: true, framesPerSecond: 30, printRealTIme: process.stdout.isTTY && process.env.NODE_ENV !== 'test', ...options }
+    this.options = {
+      ...this.options,
+      ...options
+    }
 
     this.framesPerSecond = this.options.framesPerSecond
     this.frameDuration = 1000 / this.framesPerSecond
@@ -79,6 +82,8 @@ export default class TerminalPresenter {
   }
 
   public static start(): void {
+    if (!this.options.enabled) return
+
     if (this.presenting) return
     this.presenting = true
 
@@ -91,37 +96,35 @@ export default class TerminalPresenter {
     this.animationInterval = setInterval(() => {
       const wereLogs = this.printPendingLogs()
 
-      if (this.options.printRealTIme) {
-        for (let i = 0; i < this.documentsOrder.length; i++) {
-          const currentEntry = this.documents[this.documentsOrder[i]]
+      for (let i = 0; i < this.documentsOrder.length; i++) {
+        const currentEntry = this.documents[this.documentsOrder[i]]
 
-          for (let i = 0; i < currentEntry.controllers.length; i++) {
-            currentEntry.controllers[i].requestUpdate(this.frame, this.framesPerSecond, this.frameDuration)
+        for (let i = 0; i < currentEntry.controllers.length; i++) {
+          currentEntry.controllers[i].requestUpdate(this.frame, this.framesPerSecond, this.frameDuration)
+        }
+      }
+
+      if (this.documentsOrder.length > 0) {
+        const lines = this.documentsOrder.map((entry): string[] => this.documents[entry].terminalDocument.result.split('\n')).flat()
+
+        for (let i = 0; i < lines.length; i++) {
+          const currentLine = lines[i]
+          const previousLine = previousLines[i]
+
+          if (currentLine !== previousLine || wereLogs) {
+            writeStdout(ansiEscapes.eraseLine)
+            writeStdout(currentLine)
+            if (i !== lines.length - 1) writeStdout('\n')
+          } else {
+            if (i !== lines.length - 1) writeStdout(ansiEscapes.cursorMove(0, 1))
           }
         }
 
-        if (this.documentsOrder.length > 0) {
-          const lines = this.documentsOrder.map((entry): string[] => this.documents[entry].terminalDocument.result.split('\n')).flat()
+        if (lines.length < previousLines.length) writeStdout(ansiEscapes.eraseDown)
 
-          for (let i = 0; i < lines.length; i++) {
-            const currentLine = lines[i]
-            const previousLine = previousLines[i]
+        writeStdout(ansiEscapes.cursorMove(-999, -lines.length + 1))
 
-            if (currentLine !== previousLine || wereLogs) {
-              writeStdout(ansiEscapes.eraseLine)
-              writeStdout(currentLine)
-              if (i !== lines.length - 1) writeStdout('\n')
-            } else {
-              if (i !== lines.length - 1) writeStdout(ansiEscapes.cursorMove(0, 1))
-            }
-          }
-
-          if (lines.length < previousLines.length) writeStdout(ansiEscapes.eraseDown)
-
-          writeStdout(ansiEscapes.cursorMove(-999, -lines.length + 1))
-
-          previousLines = lines
-        }
+        previousLines = lines
       }
 
       this.frame++
@@ -137,10 +140,8 @@ export default class TerminalPresenter {
 
         this.printPendingLogs()
 
-        if (this.options.printRealTIme) {
-          writeStdout(ansiEscapes.eraseDown)
-          writeStdout(ansiEscapes.cursorShow)
-        }
+        writeStdout(ansiEscapes.eraseDown)
+        writeStdout(ansiEscapes.cursorShow)
 
         this.releaseOutput()
       }
@@ -148,6 +149,7 @@ export default class TerminalPresenter {
   }
 
   public static stop(): void {
+    if (!this.presenting) return
     if (this.stopping) return
 
     this.stopping = true

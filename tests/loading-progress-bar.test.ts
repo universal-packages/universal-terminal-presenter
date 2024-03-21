@@ -31,7 +31,7 @@ describe(TerminalPresenter, (): void => {
     const loadingBlock = LoadingBlock()
     const progressBar = ProgressBar()
 
-    TerminalPresenter.configure({ printRealTIme: true })
+    TerminalPresenter.configure({ enabled: true })
     TerminalPresenter.start()
 
     TerminalPresenter.appendDocument('document-1', { rows: [{ blocks: [loadingBlock, progressBar] }] })

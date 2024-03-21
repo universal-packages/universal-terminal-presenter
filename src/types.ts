@@ -2,9 +2,9 @@ import { BlockDescriptor, BlockSize, DocumentDescriptor, RowDescriptor, Terminal
 
 export interface TerminalPresenterOptions {
   clear?: boolean
+  enabled?: boolean
   decorateConsole?: boolean
   framesPerSecond?: number
-  printRealTIme?: boolean
 }
 
 export interface PresenterDocumentDescriptor extends Omit<DocumentDescriptor, 'rows' | 'width'> {

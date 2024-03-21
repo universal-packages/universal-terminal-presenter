@@ -26,7 +26,7 @@ afterEach((): void => {
 
 describe('TerminalPresenter', (): void => {
   it('present documents to the terminal', async (): Promise<void> => {
-    TerminalPresenter.configure({ clear: true, printRealTIme: true })
+    TerminalPresenter.configure({ clear: true, enabled: true })
 
     TerminalPresenter.start()
     TerminalPresenter.start()

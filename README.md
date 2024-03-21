@@ -45,14 +45,14 @@ TerminalPresenter.start()
 - **`clear`** `boolean`
   Clears the terminal before start presenting documents.
 
+- **`enabled`** `boolean` `default: isTTY && NODE_ENV !== 'test'`
+  Enables the terminal presenter functionality, test and environments without tty will not be enabled by default.
+
 - **`decorateConsole`** `boolean` `default: true`
   Decorates the console.\<methods\> to identify better where the logs are coming from.
 
 - **`framesPerSecond`** `number` `default: 30`
   The amount of frames per second the terminal presenter will try to achieve. There are some optimizations to only render what is necessary so this can in theory be higher than the actual refresh rate of the terminal but after 30 it's not really noticeable.
-
-- **`renderRealTime`** `boolean` `default: isTTY && NODE_ENV !== 'test'`
-  If true it will present all the real time documents, otherwise it will not present any of them.
 
 ### Static Methods
 
