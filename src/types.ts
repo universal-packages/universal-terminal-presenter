@@ -4,7 +4,7 @@ export interface TerminalPresenterOptions {
   clear?: boolean
   decorateConsole?: boolean
   framesPerSecond?: number
-  test?: boolean
+  printRealTIme?: boolean
 }
 
 export interface PresenterDocumentDescriptor extends Omit<DocumentDescriptor, 'rows' | 'width'> {

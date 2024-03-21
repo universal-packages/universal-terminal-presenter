@@ -51,8 +51,8 @@ TerminalPresenter.start()
 - **`framesPerSecond`** `number` `default: 30`
   The amount of frames per second the terminal presenter will try to achieve. There are some optimizations to only render what is necessary so this can in theory be higher than the actual refresh rate of the terminal but after 30 it's not really noticeable.
 
-- **`test`** `boolean` `default: NODE_ENV === 'test'`
-  If true it will not hook into the console and will not present anything. This is useful for testing purposes.
+- **`renderRealTime`** `boolean` `default: isTTY && NODE_ENV !== 'test'`
+  If true it will present all the real time documents, otherwise it will not present any of them.
 
 ### Static Methods
 

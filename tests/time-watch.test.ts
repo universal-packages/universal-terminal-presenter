@@ -33,7 +33,7 @@ describe('TerminalPresenter', (): void => {
 
     const timeWatch = TimeWatch()
 
-    TerminalPresenter.configure({ test: false })
+    TerminalPresenter.configure({ printRealTIme: true })
     TerminalPresenter.start()
 
     TerminalPresenter.appendDocument('document-1', { rows: [{ blocks: [timeWatch] }] })
@@ -99,7 +99,7 @@ describe('TerminalPresenter', (): void => {
 
     const timeWatch = TimeWatch({ targetTime: 1000 * 60 * 60 * 24 + 1000 * 60 * 60 + 1000 * 60 * 8 + 5000 })
 
-    TerminalPresenter.configure({ test: false })
+    TerminalPresenter.configure({ printRealTIme: true })
     TerminalPresenter.start()
 
     TerminalPresenter.appendDocument('document-1', { rows: [{ blocks: [timeWatch] }] })
