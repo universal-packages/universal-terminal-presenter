@@ -17,10 +17,11 @@ export function pushStdoutWriteAttempt(subject: string): void {
 
 function stdoutCapturer(bufferOrString: Uint8Array | string, ...args: any[]): boolean {
   const stack = new Error().stack.split('\n')
-  const printerStackLine = stack[5]
+  const printerValueStackLineIndex = stack.findIndex((line) => line.includes('node:internal/console/constructor'))
+  const printerStackLine = stack[printerValueStackLineIndex + 1]
   const printerMatch = /at (.*) .*/g.exec(printerStackLine)
   const printer = printerMatch?.[1]
-  const callerStackLine = stack[6]
+  const callerStackLine = stack[printerValueStackLineIndex + 2]
   const callerMatchType1 = /at (.*) \((.*)\)/g.exec(callerStackLine)
   const callerMatchType2 = /at (.*)/g.exec(callerStackLine)
   const caller = callerMatchType1?.[1]
