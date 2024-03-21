@@ -43,7 +43,11 @@ export default class TerminalPresenter {
   }
 
   public static print(subject: string): void {
-    pushStdoutWriteAttempt(subject)
+    if (this.options.enabled) {
+      pushStdoutWriteAttempt(subject)
+    } else {
+      console.log(subject)
+    }
   }
 
   public static appendDocument(id: string, presenterDocument: PresenterDocumentDescriptor): void {
