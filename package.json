@@ -16,7 +16,7 @@
     "update-universal-dependencies": "umaintenance update-universal-dependencies"
   },
   "dependencies": {
-    "@universal-packages/terminal-document": "^1.2.4",
+    "@universal-packages/terminal-document": "^1.2.5",
     "ansi-escapes": "^4.3.2"
   },
   "devDependencies": {
