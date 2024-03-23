@@ -19,6 +19,8 @@ jest.spyOn(console, 'log').mockImplementation((subject) => {
   writeStdout(subject)
 })
 
+process.stdout.columns = 10
+
 const writeStdoutMock = writeStdout as jest.Mock
 
 afterEach((): void => {
@@ -35,20 +37,21 @@ describe(TerminalPresenter, (): void => {
     jest.advanceTimersToNextTimer()
 
     console.log('This is a test message')
+    TerminalPresenter.print('This is another test message\n')
 
     jest.advanceTimersToNextTimer()
 
     const calls = writeStdoutMock.mock.calls.map((call) => stripAnsi(call.join(' ')))
 
-    expect(calls).toEqual(['cursorHide', 'This is a test message'])
+    expect(calls).toEqual(['cursorHide', 'This is a test message', 'eraseLine', 'This is another test message\n', 'eraseLine', '\n'])
 
     writeStdoutMock.mockClear()
 
-    TerminalPresenter.print('This is another test message\n')
+    TerminalPresenter.printDocument({ rows: [{ blocks: [{ text: 'This is a test message' }] }] })
 
     jest.advanceTimersToNextTimer()
 
-    expect(writeStdoutMock.mock.calls).toEqual([['eraseLine'], ['This is another test message\n'], ['eraseLine'], ['\n']])
+    expect(writeStdoutMock.mock.calls).toEqual([['eraseLine'], ['This is a \n'], ['eraseLine'], ['test      \n'], ['eraseLine'], ['message   \n']])
   })
 
   it('does not decorate the printed console outputs when disabled', async (): Promise<void> => {

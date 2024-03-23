@@ -1,4 +1,4 @@
-import { BlockDescriptor, TerminalDocument } from '@universal-packages/terminal-document'
+import { BlockDescriptor, DocumentDescriptor, TerminalDocument } from '@universal-packages/terminal-document'
 import ansiEscapes from 'ansi-escapes'
 import chalk from 'chalk'
 
@@ -48,6 +48,12 @@ export default class TerminalPresenter {
     } else {
       console.log(subject)
     }
+  }
+
+  public static printDocument(documentDescriptor: DocumentDescriptor): void {
+    const document = new TerminalDocument()
+    document.describe({ width: getTerminalColumns(), ...documentDescriptor })
+    this.print(document.result)
   }
 
   public static appendDocument(id: string, presenterDocument: PresenterDocumentDescriptor): void {
