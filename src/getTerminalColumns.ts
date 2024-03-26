@@ -1,3 +1,3 @@
 export function getTerminalColumns() {
-  return process.stdout.columns
+  return process.stdout.isTTY ? process.stdout.columns || 80 : 80
 }

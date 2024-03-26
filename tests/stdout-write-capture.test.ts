@@ -4,6 +4,7 @@ import { TerminalPresenter } from '../src'
 import { writeStdout } from '../src/writeStdout'
 
 jest.mock('../src/writeStdout', () => ({ writeStdout: jest.fn() }))
+jest.mock('../src/getTerminalColumns', () => ({ getTerminalColumns: () => 10 }))
 jest.mock('ansi-escapes', () => ({
   clearTerminal: 'clearTerminal',
   cursorHide: 'cursorHide',
@@ -18,8 +19,6 @@ jest.useFakeTimers()
 jest.spyOn(console, 'log').mockImplementation((subject) => {
   writeStdout(subject)
 })
-
-process.stdout.columns = 10
 
 const writeStdoutMock = writeStdout as jest.Mock
 

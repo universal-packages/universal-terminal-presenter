@@ -5,6 +5,7 @@ import { TimeWatch } from '../src/components/TimeWatch'
 import { writeStdout } from '../src/writeStdout'
 
 jest.mock('../src/writeStdout', () => ({ writeStdout: jest.fn() }))
+jest.mock('../src/getTerminalColumns', () => ({ getTerminalColumns: () => 60 }))
 jest.mock('ansi-escapes', () => ({
   clearTerminal: 'clearTerminal',
   cursorHide: 'cursorHide',
@@ -13,8 +14,6 @@ jest.mock('ansi-escapes', () => ({
   cursorMove: jest.fn((x, y) => `cursorMove(${x},${y})`),
   cursorShow: 'cursorShow'
 }))
-
-process.stdout.columns = 60
 
 jest.useFakeTimers()
 

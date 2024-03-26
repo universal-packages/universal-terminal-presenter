@@ -165,8 +165,8 @@ export default class TerminalPresenter {
     this.stopping = true
   }
 
-  private static generateTerminalDocumentEntry(presenterDocument: PresenterDocumentDescriptor): DocumentEntry {
-    const { rows: presenterRows, ...options } = presenterDocument
+  private static generateTerminalDocumentEntry(presenterDocumentDescriptor: PresenterDocumentDescriptor): DocumentEntry {
+    const { rows: presenterRows, ...restOfPresenterDocumentDescriptor } = presenterDocumentDescriptor
     const rows = []
     const controllers = []
 
@@ -203,7 +203,7 @@ export default class TerminalPresenter {
       })
     }
 
-    terminalDocumentInstance.describe({ ...options, rows, width: getTerminalColumns() })
+    terminalDocumentInstance.describe({ ...restOfPresenterDocumentDescriptor, rows, width: getTerminalColumns() })
 
     return { terminalDocument: terminalDocumentInstance, controllers }
   }
