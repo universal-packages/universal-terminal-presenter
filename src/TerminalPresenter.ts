@@ -148,7 +148,7 @@ export default class TerminalPresenter {
 
         clearInterval(this.animationInterval)
 
-        this.printPendingLogs()
+        this.printPendingLogs(true)
 
         writeStdout(ansiEscapes.eraseDown)
         writeStdout(ansiEscapes.cursorShow)
@@ -216,31 +216,35 @@ export default class TerminalPresenter {
     releaseStdoutWrite()
   }
 
-  private static printPendingLogs(): boolean {
+  private static printPendingLogs(allPending?: boolean): boolean {
     if (STDOUT_WRITE_ATTEMPTS.length > 0) {
-      const currentEntry = STDOUT_WRITE_ATTEMPTS.shift()
-      let linesToPrint: string[] = []
+      while (STDOUT_WRITE_ATTEMPTS.length > 0) {
+        const currentEntry = STDOUT_WRITE_ATTEMPTS.shift()
+        let linesToPrint: string[] = []
 
-      if (this.options.decorateConsole && !currentEntry.direct) {
-        const printerParts = currentEntry.printer.split('.')
-        const printerDecorationColor = DECORATION_COLORS[printerParts[0]] || chalk.cyan
-        const decoratedPrinter = `${printerParts[0]}.${printerDecorationColor(printerParts[1])}`
+        if (this.options.decorateConsole && !currentEntry.direct) {
+          const printerParts = currentEntry.printer.split('.')
+          const printerDecorationColor = DECORATION_COLORS[printerParts[0]] || chalk.cyan
+          const decoratedPrinter = `${printerParts[0]}.${printerDecorationColor(printerParts[1])}`
 
-        const decoratedCaller = currentEntry.caller ? chalk.cyan(currentEntry.caller) : ''
-        const lineParts = currentEntry.line.replace(process.cwd() + '/', '').split('/')
-        lineParts[lineParts.length - 1] = chalk.cyan(lineParts[lineParts.length - 1])
-        const atLine = `at ${decoratedCaller} ${lineParts.join('/')}`
+          const decoratedCaller = currentEntry.caller ? chalk.cyan(currentEntry.caller) : ''
+          const lineParts = currentEntry.line.replace(process.cwd() + '/', '').split('/')
+          lineParts[lineParts.length - 1] = chalk.cyan(lineParts[lineParts.length - 1])
+          const atLine = `at ${decoratedCaller} ${lineParts.join('/')}`
 
-        const decorationLine = `${decoratedPrinter} ${atLine}`
+          const decorationLine = `${decoratedPrinter} ${atLine}`
 
-        linesToPrint = [decorationLine, ...currentEntry.subject.split('\n')]
-      } else {
-        linesToPrint = currentEntry.subject.split('\n')
-      }
+          linesToPrint = [decorationLine, ...currentEntry.subject.split('\n')]
+        } else {
+          linesToPrint = currentEntry.subject.split('\n')
+        }
 
-      for (let i = 0; i < linesToPrint.length; i++) {
-        writeStdout(ansiEscapes.eraseLine)
-        writeStdout(linesToPrint[i] + '\n')
+        for (let i = 0; i < linesToPrint.length; i++) {
+          writeStdout(ansiEscapes.eraseLine)
+          writeStdout(linesToPrint[i] + '\n')
+        }
+
+        if (!allPending) break
       }
 
       return true
