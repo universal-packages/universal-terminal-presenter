@@ -32,6 +32,8 @@ export default class TerminalPresenter {
   private static presenting = false
   private static stopping = false
 
+  private static resolveStop: (...args: any[]) => void
+
   public static configure(options?: TerminalPresenterOptions): void {
     this.options = {
       ...this.options,
@@ -154,15 +156,20 @@ export default class TerminalPresenter {
         writeStdout(ansiEscapes.cursorShow)
 
         this.releaseOutput()
+        this.resolveStop()
       }
     }, this.frameDuration)
   }
 
-  public static stop(): void {
+  public static async stop(): Promise<void> {
     if (!this.presenting) return
     if (this.stopping) return
 
     this.stopping = true
+
+    await new Promise((resolve): void => {
+      this.resolveStop = resolve
+    })
   }
 
   private static generateTerminalDocumentEntry(presenterDocumentDescriptor: PresenterDocumentDescriptor): DocumentEntry {
