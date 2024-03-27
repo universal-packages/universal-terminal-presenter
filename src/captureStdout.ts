@@ -5,10 +5,14 @@ export const STDOUT_WRITE_ATTEMPTS: StdoutWriteAttemptEntry[] = []
 
 export function captureStdoutWrite(): void {
   process.stdout.write = stdoutCapturer
+
+  process.on('uncaughtException', handleException)
 }
 
 export function releaseStdoutWrite(): void {
   process.stdout.write = ORIGINAL_STDOUT_WRITE
+
+  process.off('uncaughtException', handleException)
 }
 
 export function pushStdoutWriteAttempt(subject: string): void {
@@ -25,7 +29,7 @@ function stdoutCapturer(bufferOrString: Uint8Array | string, ...args: any[]): bo
   const callerMatchType1 = /at (.*) \((.*)\)/g.exec(callerStackLine)
   const callerMatchType2 = /at (.*)/g.exec(callerStackLine)
   const caller = callerMatchType1?.[1]
-  const line = callerMatchType2 ? callerMatchType1[2] : callerMatchType2[1]
+  const line = callerMatchType1 ? callerMatchType1[2] : callerMatchType2[1]
 
   if (typeof bufferOrString === 'string') {
     STDOUT_WRITE_ATTEMPTS.push({ subject: bufferOrString, caller, printer, line })
@@ -33,4 +37,9 @@ function stdoutCapturer(bufferOrString: Uint8Array | string, ...args: any[]): bo
   } else {
     return ORIGINAL_STDOUT_WRITE(bufferOrString, ...args)
   }
+}
+
+function handleException(error: Error): void {
+  console.error(error)
+  process.exit(1)
 }
