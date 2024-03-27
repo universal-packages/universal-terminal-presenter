@@ -43,7 +43,7 @@ export default class TerminalPresenter {
   }
 
   public static print(subject: string): void {
-    if (this.options.enabled) {
+    if (this.options.enabled || this.presenting) {
       pushStdoutWriteAttempt(subject)
     } else {
       console.log(subject)
