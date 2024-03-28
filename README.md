@@ -45,7 +45,7 @@ TerminalPresenter.start()
 - **`clear`** `boolean`
   Clears the terminal before start presenting documents.
 
-- **`enabled`** `boolean` `default: isTTY && NODE_ENV !== 'test'`
+- **`enable`** `boolean` `default: isTTY && NODE_ENV !== 'test'`
   Enables the terminal presenter functionality, test and environments without tty will not be enabled by default.
 
 - **`decorateConsole`** `boolean` `default: true`

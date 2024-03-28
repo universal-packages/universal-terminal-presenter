@@ -2,7 +2,7 @@ import { BlockDescriptor, BlockSize, DocumentDescriptor, RowDescriptor, Terminal
 
 export interface TerminalPresenterOptions {
   clear?: boolean
-  enabled?: boolean
+  enable?: boolean
   decorateConsole?: boolean
   framesPerSecond?: number
 }

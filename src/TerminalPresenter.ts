@@ -16,7 +16,7 @@ const DECORATION_COLORS = {
 export default class TerminalPresenter {
   private static options: TerminalPresenterOptions = {
     clear: false,
-    enabled: process.stdout.isTTY && process.env.NODE_ENV !== 'test',
+    enable: process.stdout.isTTY && process.env.NODE_ENV !== 'test',
     decorateConsole: true,
     framesPerSecond: 30
   }
@@ -45,7 +45,7 @@ export default class TerminalPresenter {
   }
 
   public static print(subject: string): void {
-    if (this.options.enabled && this.presenting) {
+    if (this.options.enable && this.presenting) {
       pushStdoutWriteAttempt(subject)
     } else {
       console.log(subject)
@@ -94,7 +94,7 @@ export default class TerminalPresenter {
   }
 
   public static start(): void {
-    if (!this.options.enabled) return
+    if (!this.options.enable) return
 
     if (this.presenting) return
     this.presenting = true
