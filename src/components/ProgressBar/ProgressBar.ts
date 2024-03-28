@@ -1,5 +1,3 @@
-import { BlueColor } from '@universal-packages/terminal-document'
-
 import { BlockControllerConfiguration } from '../../types'
 import { ProgressBarController, ProgressBarOptions } from './ProgressBar.types'
 

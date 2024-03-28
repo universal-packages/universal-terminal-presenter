@@ -29,6 +29,7 @@ export default class TerminalPresenter {
   private static animationInterval: NodeJS.Timeout
   private static frame = 0
 
+  private static screenCleared = false
   private static presenting = false
   private static stopping = false
 
@@ -93,6 +94,21 @@ export default class TerminalPresenter {
     delete this.documents[id]
   }
 
+  public static clearScreen(): void {
+    if (this.options.clear && !this.screenCleared) {
+      writeStdout(ansiEscapes.clearTerminal)
+      this.screenCleared = true
+    }
+  }
+
+  public static captureOutput(): void {
+    captureStdoutWrite()
+  }
+
+  public static releaseOutput(): void {
+    releaseStdoutWrite()
+  }
+
   public static start(): void {
     if (!this.options.enable) return
 
@@ -100,8 +116,8 @@ export default class TerminalPresenter {
     this.presenting = true
 
     this.captureOutput()
+    this.clearScreen()
 
-    if (this.options.clear) writeStdout(ansiEscapes.clearTerminal)
     writeStdout(ansiEscapes.cursorHide)
 
     let previousLines = []
@@ -144,6 +160,7 @@ export default class TerminalPresenter {
       if (this.stopping) {
         this.stopping = false
         this.presenting = false
+        this.screenCleared = false
 
         this.documents = {}
         this.documentsOrder = []
@@ -213,14 +230,6 @@ export default class TerminalPresenter {
     terminalDocumentInstance.describe({ ...restOfPresenterDocumentDescriptor, rows, width: getTerminalColumns() })
 
     return { terminalDocument: terminalDocumentInstance, controllers }
-  }
-
-  private static captureOutput(): void {
-    captureStdoutWrite()
-  }
-
-  private static releaseOutput(): void {
-    releaseStdoutWrite()
   }
 
   private static printPendingLogs(allPending?: boolean): boolean {

@@ -3,16 +3,22 @@ import { StdoutWriteAttemptEntry } from './types'
 export const ORIGINAL_STDOUT_WRITE = process.stdout.write.bind(process.stdout)
 export const STDOUT_WRITE_ATTEMPTS: StdoutWriteAttemptEntry[] = []
 
+let CAPTURED = false
+
 export function captureStdoutWrite(): void {
+  if (CAPTURED) return
   process.stdout.write = stdoutCapturer
 
   process.on('uncaughtException', handleException)
+  CAPTURED = true
 }
 
 export function releaseStdoutWrite(): void {
+  if (!CAPTURED) return
   process.stdout.write = ORIGINAL_STDOUT_WRITE
 
   process.off('uncaughtException', handleException)
+  CAPTURED = false
 }
 
 export function pushStdoutWriteAttempt(subject: string): void {

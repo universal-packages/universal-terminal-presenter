@@ -92,6 +92,18 @@ Updates a block in a document that is already being presented in the terminal. C
 
 Removes a document and stops presenting it in the terminal.
 
+#### `clearScreen()`
+
+Clears the terminal screen if configured in options.
+
+#### `captureOutput()`
+
+Captures the output of the console to be decorated, useful for not realtime functionality but still want to decorate the output.
+
+#### `releaseOutput()`
+
+Releases the output of the console to work as normal.
+
 ## Typescript
 
 This library is developed in TypeScript and shipped fully typed.
