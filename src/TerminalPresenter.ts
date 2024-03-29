@@ -49,7 +49,7 @@ export default class TerminalPresenter {
     if (this.options.enable && this.presenting) {
       pushStdoutWriteAttempt(subject)
     } else {
-      console.log(subject)
+      writeStdout(subject + '\n')
     }
   }
 
