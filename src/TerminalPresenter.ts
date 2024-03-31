@@ -14,7 +14,7 @@ const DECORATION_COLORS = {
 }
 
 export default class TerminalPresenter {
-  private static options: TerminalPresenterOptions = {
+  public static readonly options: TerminalPresenterOptions = {
     clear: false,
     enable: process.stdout.isTTY && process.env.NODE_ENV !== 'test',
     decorateConsole: true,
@@ -35,11 +35,8 @@ export default class TerminalPresenter {
 
   private static resolveStop: (...args: any[]) => void
 
-  public static configure(options?: TerminalPresenterOptions): void {
-    this.options = {
-      ...this.options,
-      ...options
-    }
+  public static configure(options: TerminalPresenterOptions): void {
+    Object.assign(this.options, options)
 
     this.framesPerSecond = this.options.framesPerSecond
     this.frameDuration = 1000 / this.framesPerSecond
