@@ -11,7 +11,7 @@ import { BlockController, ConsoleCaptureEntry, DocumentEntry, PresenterDocumentD
 
 const DECORATION_COLORS = { stdout: chalk.cyan, stderr: chalk.red }
 
-const OPTIONS: TerminalPresenterOptions = {
+export const OPTIONS: TerminalPresenterOptions = {
   clear: false,
   enabled: ORIGINAL_STDOUT.isTTY && process.env.NODE_ENV !== 'test',
   decorateConsole: true,
