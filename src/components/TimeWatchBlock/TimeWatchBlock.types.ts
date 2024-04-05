@@ -1,6 +1,6 @@
 import { BlockController } from '../../types'
 
-export interface TimeWatchOptions {
+export interface TimeWatchBlockOptions {
   initialTime?: number
   targetTime?: number
 }

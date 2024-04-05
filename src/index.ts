@@ -1,5 +1,5 @@
 export { default as TerminalPresenter } from './TerminalPresenter'
 export * from './types'
 export * from './components/LoadingBlock'
-export * from './components/ProgressBar'
-export * from './components/TimeWatch'
+export * from './components/ProgressBarBlock'
+export * from './components/TimeWatchBlock'

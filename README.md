@@ -19,9 +19,9 @@ Once started it hooks into the printing capabilities of the application in order
 ```typescript
 import { TerminalPresenter } from '@universal-packages/terminal-presenter'
 
-TerminalPresenter.configure({ clear: true })
+const terminalPresenter = new TerminalPresenter({ clear: true })
 
-TerminalPresenter.appendDocument('document-1', {
+terminalPresenter.appendRealTimeDocument('document-1', {
   rows: [
     {
       blocks: [{ text: 'Hello World!!' }]
@@ -29,7 +29,7 @@ TerminalPresenter.appendDocument('document-1', {
   ]
 })
 
-TerminalPresenter.appendDocument('document-2', {
+terminalPresenter.appendRealTimeDocument('document-2', {
   rows: [
     {
       blocks: [{ text: 'Some more real time info' }]
@@ -37,7 +37,7 @@ TerminalPresenter.appendDocument('document-2', {
   ]
 })
 
-TerminalPresenter.start()
+terminalPresenter.preset()
 ```
 
 ### Options
@@ -45,8 +45,8 @@ TerminalPresenter.start()
 - **`clear`** `boolean`
   Clears the terminal before start presenting documents.
 
-- **`enable`** `boolean` `default: isTTY && NODE_ENV !== 'test'`
-  Enables the terminal presenter functionality, test and environments without tty will not be enabled by default.
+- **`enabled`** `boolean` `default: isTTY && NODE_ENV !== 'test'`
+  Enables the terminal presenter functionality like capture the console to be decorated and presenting real time documents, test and environments without tty will not be enabled by default.
 
 - **`decorateConsole`** `boolean` `default: true`
   Decorates the console.\<methods\> to identify better where the logs are coming from.
@@ -54,13 +54,16 @@ TerminalPresenter.start()
 - **`framesPerSecond`** `number` `default: 30`
   The amount of frames per second the terminal presenter will try to achieve. There are some optimizations to only render what is necessary so this can in theory be higher than the actual refresh rate of the terminal but after 30 it's not really noticeable.
 
+- **`relativeDecorationPath`** `boolean` `default: true`
+  Reduces where the logs are coming from to a relative path to the project root.
+
 ### Static Methods
 
-#### `start()`
+#### `present()`
 
-Starts the terminal presenter. This will start presenting all documents and hook into the console to present logs in real time.
+Starts the terminal presenter. This will start presenting all documents and hook into the console to be decorated.
 
-#### `stop()`
+#### `restore()`
 
 Stops the terminal presenter. This will stop presenting all documents and unhook from the console.
 
@@ -72,23 +75,19 @@ Use this to print anything above the real time documents. This will be printed d
 
 Use this to print a document above the real time documents. This will be printed directly and will not be captured the same as console.log ones. See [Descriptor](https://github.com/universal-packages/universal-terminal-document?tab=readme-ov-file#descriptor) for more information.
 
-#### `appendDocument(id: string, descriptor: Descriptor)`
+#### `appendRealTimeDocument(id: string, descriptor: Descriptor)`
 
 Sets a document to be presented in real time in the terminal below all coming logs and after all other presented documents. See [Descriptor](https://github.com/universal-packages/universal-terminal-document?tab=readme-ov-file#descriptor) for more information.
 
-#### `prependDocument(id: string, descriptor: Descriptor)`
+#### `prependRealTimeDocument(id: string, descriptor: Descriptor)`
 
 Sets a document to be presented in real time in the terminal above all coming logs and before all other presented documents.See [Descriptor](https://github.com/universal-packages/universal-terminal-document?tab=readme-ov-file#descriptor) for more information.
 
-#### `updateDocument(id: string, descriptor: Descriptor)`
+#### `updateRealTimeDocument(id: string, descriptor: Descriptor)`
 
 Updates a document that is already being presented in the terminal. [Descriptor](https://github.com/universal-packages/universal-terminal-document?tab=readme-ov-file#descriptor) for more information.
 
-#### `updateDocumentBlocks(id: string, blockId: string, descriptor: BlockDescriptor)`
-
-Updates a block in a document that is already being presented in the terminal. Check [Block update](https://github.com/universal-packages/universal-terminal-document?tab=readme-ov-file#updateid-string-block-object) for more information.
-
-#### `removeDocument(id: string)`
+#### `removeRealTimeDocument(id: string)`
 
 Removes a document and stops presenting it in the terminal.
 
@@ -96,11 +95,11 @@ Removes a document and stops presenting it in the terminal.
 
 Clears the terminal screen if configured in options.
 
-#### `captureOutput()`
+#### `captureConsole()`
 
 Captures the output of the console to be decorated, useful for not realtime functionality but still want to decorate the output.
 
-#### `releaseOutput()`
+#### `releaseConsole()`
 
 Releases the output of the console to work as normal.
 

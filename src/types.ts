@@ -2,9 +2,10 @@ import { BlockDescriptor, BlockSize, DocumentDescriptor, RowDescriptor, Terminal
 
 export interface TerminalPresenterOptions {
   clear?: boolean
-  enable?: boolean
+  enabled?: boolean
   decorateConsole?: boolean
   framesPerSecond?: number
+  relativeDecorationPath?: boolean
 }
 
 export interface PresenterDocumentDescriptor extends Omit<DocumentDescriptor, 'rows' | 'width'> {
@@ -31,10 +32,11 @@ export interface DocumentEntry {
   controllers: BlockController[]
 }
 
-export interface StdoutWriteAttemptEntry {
+export interface ConsoleCaptureEntry {
   caller?: string
   direct?: boolean
   line?: string
   printer?: string
   subject: string
+  type?: 'stdout' | 'stderr'
 }

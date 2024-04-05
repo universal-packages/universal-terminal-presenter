@@ -6,7 +6,7 @@ export type BarStyle = 'solid' | 'sharp'
 export type CaptionType = 'percentage' | 'target'
 export type CaptionSide = 'left' | 'right'
 
-export interface ProgressBarOptions {
+export interface ProgressBarBlockOptions {
   caption?: CaptionType
   captionSide?: CaptionSide
   color?: Color

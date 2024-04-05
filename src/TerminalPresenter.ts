@@ -2,124 +2,126 @@ import { BlockDescriptor, DocumentDescriptor, TerminalDocument } from '@universa
 import ansiEscapes from 'ansi-escapes'
 import chalk from 'chalk'
 
-import { STDOUT_WRITE_ATTEMPTS, captureStdoutWrite, pushStdoutWriteAttempt, releaseStdoutWrite } from './captureStdout'
+import { ORIGINAL_STDERR } from './ORIGINAL_STDERR'
+import { ORIGINAL_STDOUT } from './ORIGINAL_STDOUT'
+import { WRITE_ORIGINAL_STDERR } from './WRITE_ORIGINAL_STDERR'
+import { WRITE_ORIGINAL_STDOUT } from './WRITE_ORIGINAL_STDOUT'
 import { getTerminalColumns } from './getTerminalColumns'
-import { BlockController, DocumentEntry, PresenterDocumentDescriptor, TerminalPresenterOptions } from './types'
-import { writeStdout } from './writeStdout'
+import { BlockController, ConsoleCaptureEntry, DocumentEntry, PresenterDocumentDescriptor, TerminalPresenterOptions } from './types'
 
-const DECORATION_COLORS = {
-  info: chalk.blue,
-  warn: chalk.yellow,
-  error: chalk.red
-}
+export const DECORATION_COLORS = { stdout: chalk.cyan, stderr: chalk.red }
 
 export default class TerminalPresenter {
-  public static readonly options: TerminalPresenterOptions = {
-    clear: false,
-    enable: process.stdout.isTTY && process.env.NODE_ENV !== 'test',
-    decorateConsole: true,
-    framesPerSecond: 30
+  public readonly options: TerminalPresenterOptions
+
+  private documents: Record<string, DocumentEntry> = {}
+  private documentsOrder: string[] = []
+  private consoleCaptureQueue: ConsoleCaptureEntry[] = []
+
+  private screenCleared = false
+  private presenting = false
+  private consoleCaptured = false
+  private restoring = false
+  private resolveRestore: (...args: any[]) => void
+
+  private static alreadyInstantiated = false
+  private invalid = false
+
+  private framesPerSecond = 30
+  private frameDuration = 1000 / this.framesPerSecond
+  private frame = 0
+  private animationInterval: NodeJS.Timeout
+
+  private handleUncaughtException = (error: Error): void => {
+    console.error(error)
+    process.exit(1)
   }
 
-  private static documents: Record<string, DocumentEntry> = {}
-  private static documentsOrder: string[] = []
+  private writeStdoutOrCaptureConsole = (bufferOrString: Uint8Array | string, ...args: any[]): boolean => {
+    if (typeof bufferOrString === 'string') {
+      if (this.captureConsoleEntry(bufferOrString, 'stdout')) return true
+    }
 
-  private static framesPerSecond = 30
-  private static frameDuration = 1000 / this.framesPerSecond
-  private static animationInterval: NodeJS.Timeout
-  private static frame = 0
+    return WRITE_ORIGINAL_STDOUT(bufferOrString, ...args)
+  }
 
-  private static screenCleared = false
-  private static presenting = false
-  private static stopping = false
+  private writeStderrOrCaptureConsole = (bufferOrString: Uint8Array | string, ...args: any[]): boolean => {
+    if (typeof bufferOrString === 'string') {
+      if (this.captureConsoleEntry(bufferOrString, 'stderr')) return true
+    }
 
-  private static resolveStop: (...args: any[]) => void
+    return WRITE_ORIGINAL_STDERR(bufferOrString, ...args)
+  }
 
-  public static configure(options: TerminalPresenterOptions): void {
-    Object.assign(this.options, options)
+  constructor(options?: TerminalPresenterOptions) {
+    this.options = {
+      clear: false,
+      enabled: ORIGINAL_STDOUT.isTTY && process.env.NODE_ENV !== 'test',
+      decorateConsole: true,
+      framesPerSecond: 30,
+      relativeDecorationPath: true,
+      ...options
+    }
 
     this.framesPerSecond = this.options.framesPerSecond
     this.frameDuration = 1000 / this.framesPerSecond
-  }
 
-  public static print(subject: string): void {
-    if (this.options.enable && this.presenting) {
-      pushStdoutWriteAttempt(subject)
+    if (TerminalPresenter.alreadyInstantiated) {
+      this.invalid = true
+
+      console.warn('TerminalPresenter has already been instantiated somewhere else. To avoid conflicts, new instances will not do anything.')
     } else {
-      writeStdout(subject + '\n')
+      TerminalPresenter.alreadyInstantiated = true
     }
   }
 
-  public static printDocument(documentDescriptor: DocumentDescriptor): void {
-    const document = new TerminalDocument()
-    document.describe({ width: getTerminalColumns(), ...documentDescriptor })
-    this.print(document.result)
-  }
-
-  public static appendDocument(id: string, presenterDocument: PresenterDocumentDescriptor): void {
+  public appendRealTimeDocument(id: string, presenterDocument: PresenterDocumentDescriptor): void {
     if (this.documents[id]) return
 
     this.documents[id] = this.generateTerminalDocumentEntry(presenterDocument)
     this.documentsOrder.push(id)
   }
 
-  public static prependDocument(id: string, presenterDocument: PresenterDocumentDescriptor): void {
+  public clearRealTimeDocuments(): void {
+    this.documents = {}
+    this.documentsOrder = []
+  }
+
+  public clearScreen(): void {
+    if (this.invalid || !this.options.enabled || !this.options.clear || this.screenCleared) return
+    this.screenCleared = true
+  }
+
+  public captureConsole(): void {
+    if (this.invalid || !this.options.enabled || this.consoleCaptured) return
+    ORIGINAL_STDOUT.write = this.writeStdoutOrCaptureConsole
+    ORIGINAL_STDERR.write = this.writeStderrOrCaptureConsole
+
+    process.on('uncaughtException', this.handleUncaughtException)
+
+    this.consoleCaptured = true
+  }
+
+  public prependRealTimeDocument(id: string, presenterDocument: PresenterDocumentDescriptor): void {
     if (this.documents[id]) return
 
     this.documents[id] = this.generateTerminalDocumentEntry(presenterDocument)
     this.documentsOrder.unshift(id)
   }
 
-  public static updateDocument(id: string, presenterDocument: PresenterDocumentDescriptor): void {
-    const documentEntry = this.documents[id]
+  public present(): void {
+    if (this.invalid || !this.options.enabled || this.presenting || this.restoring) return
 
-    if (!documentEntry) return
-
-    this.documents[id] = this.generateTerminalDocumentEntry(presenterDocument)
-  }
-
-  public static updateDocumentBlock(id: string, blockId: string, blockDescriptor: BlockDescriptor): void {
-    const documentEntry = this.documents[id]
-
-    if (!documentEntry) return
-
-    documentEntry.terminalDocument.update(blockId, blockDescriptor)
-  }
-
-  public static removeDocument(id: string): void {
-    this.documentsOrder = this.documentsOrder.filter((entry) => entry !== id)
-    delete this.documents[id]
-  }
-
-  public static clearScreen(): void {
-    if (this.options.clear && !this.screenCleared) {
-      writeStdout(ansiEscapes.clearTerminal)
-      this.screenCleared = true
-    }
-  }
-
-  public static captureOutput(): void {
-    captureStdoutWrite()
-  }
-
-  public static releaseOutput(): void {
-    releaseStdoutWrite()
-  }
-
-  public static start(): void {
-    if (!this.options.enable) return
-
-    if (this.presenting) return
     this.presenting = true
 
-    this.captureOutput()
+    this.captureConsole()
     this.clearScreen()
 
-    writeStdout(ansiEscapes.cursorHide)
+    WRITE_ORIGINAL_STDOUT(ansiEscapes.cursorHide)
 
     let previousLines = []
     this.animationInterval = setInterval(() => {
-      const wereLogs = this.printPendingLogs()
+      const wereLogs = this.printPendingConsoleCaptureEntries()
 
       for (let i = 0; i < this.documentsOrder.length; i++) {
         const currentEntry = this.documents[this.documentsOrder[i]]
@@ -137,25 +139,25 @@ export default class TerminalPresenter {
           const previousLine = previousLines[i]
 
           if (currentLine !== previousLine || wereLogs) {
-            writeStdout(ansiEscapes.eraseLine)
-            writeStdout(currentLine)
-            if (i !== lines.length - 1) writeStdout('\n')
+            WRITE_ORIGINAL_STDOUT(ansiEscapes.eraseLine)
+            WRITE_ORIGINAL_STDOUT(currentLine)
+            if (i !== lines.length - 1) WRITE_ORIGINAL_STDOUT('\n')
           } else {
-            if (i !== lines.length - 1) writeStdout(ansiEscapes.cursorMove(0, 1))
+            if (i !== lines.length - 1) WRITE_ORIGINAL_STDOUT(ansiEscapes.cursorMove(0, 1))
           }
         }
 
-        if (lines.length < previousLines.length) writeStdout(ansiEscapes.eraseDown)
+        if (lines.length < previousLines.length) WRITE_ORIGINAL_STDOUT(ansiEscapes.eraseDown)
 
-        writeStdout(ansiEscapes.cursorMove(-999, -lines.length + 1))
+        WRITE_ORIGINAL_STDOUT(ansiEscapes.cursorMove(-999, -lines.length + 1))
 
         previousLines = lines
       }
 
       this.frame++
 
-      if (this.stopping) {
-        this.stopping = false
+      if (this.restoring) {
+        this.restoring = false
         this.presenting = false
         this.screenCleared = false
 
@@ -164,29 +166,92 @@ export default class TerminalPresenter {
 
         clearInterval(this.animationInterval)
 
-        this.printPendingLogs(true)
+        this.printPendingConsoleCaptureEntries(true)
 
-        writeStdout(ansiEscapes.eraseDown)
-        writeStdout(ansiEscapes.cursorShow)
+        WRITE_ORIGINAL_STDOUT(ansiEscapes.eraseDown)
+        WRITE_ORIGINAL_STDOUT(ansiEscapes.cursorShow)
 
-        this.releaseOutput()
-        this.resolveStop()
+        this.releaseConsole()
+        this.resolveRestore()
       }
     }, this.frameDuration)
   }
 
-  public static async stop(): Promise<void> {
-    if (!this.presenting) return
-    if (this.stopping) return
+  public print(subject: string): void {
+    if (this.invalid || !this.options.enabled) return
 
-    this.stopping = true
+    if (this.presenting) {
+      this.consoleCaptureQueue.push({ subject, type: 'stdout', direct: true })
+    } else {
+      WRITE_ORIGINAL_STDOUT(subject + '\n')
+    }
+  }
+
+  public printDocument(documentDescriptor: DocumentDescriptor): void {
+    const document = new TerminalDocument()
+    document.describe({ ...documentDescriptor, width: getTerminalColumns() })
+    this.print(document.result)
+  }
+
+  public releaseConsole(): void {
+    if (this.invalid || !this.options.enabled || !this.consoleCaptured) return
+    ORIGINAL_STDOUT.write = WRITE_ORIGINAL_STDOUT
+    ORIGINAL_STDERR.write = WRITE_ORIGINAL_STDERR
+
+    process.off('uncaughtException', this.handleUncaughtException)
+
+    this.consoleCaptured = false
+  }
+
+  public removeRealTimeDocument(id: string): void {
+    this.documentsOrder = this.documentsOrder.filter((entry) => entry !== id)
+    delete this.documents[id]
+  }
+
+  public async restore(): Promise<void> {
+    if (!this.options.enabled || !this.presenting || this.restoring) return
+
+    this.restoring = true
 
     await new Promise((resolve): void => {
-      this.resolveStop = resolve
+      this.resolveRestore = resolve
     })
   }
 
-  private static generateTerminalDocumentEntry(presenterDocumentDescriptor: PresenterDocumentDescriptor): DocumentEntry {
+  public updateRealTimeDocument(id: string, presenterDocument: PresenterDocumentDescriptor): void {
+    const documentEntry = this.documents[id]
+
+    if (!documentEntry) return
+
+    this.documents[id] = this.generateTerminalDocumentEntry(presenterDocument)
+  }
+
+  private captureConsoleEntry(subject: string, type: 'stdout' | 'stderr'): boolean {
+    const stack = new Error().stack.split('\n')
+    const printerValueStackLineIndex = stack.findLastIndex((line) => line.includes('node:internal/console/constructor') || line.includes('console.mockConstructor'))
+
+    // Console was not the caller
+    if (printerValueStackLineIndex === -1) return false
+
+    const printerStackLine = stack[printerValueStackLineIndex]
+    const printerMatch = /at (.*) .*/g.exec(printerStackLine)
+    const printer = printerMatch?.[1]
+    const callerStackLine = stack[printerValueStackLineIndex + 1]
+    const callerMatchType1 = /at (.*) \((.*)\)/g.exec(callerStackLine)
+    const callerMatchType2 = /at (.*)/g.exec(callerStackLine)
+    const caller = callerMatchType1?.[1]
+    const line = callerMatchType1 ? callerMatchType1[2] : callerMatchType2[1]
+
+    if (this.presenting) {
+      this.consoleCaptureQueue.push({ subject, caller, printer, line, type })
+    } else {
+      this.printConsoleCaptureEntry({ subject, caller, printer, line, type })
+    }
+
+    return true
+  }
+
+  private generateTerminalDocumentEntry(presenterDocumentDescriptor: PresenterDocumentDescriptor): DocumentEntry {
     const { rows: presenterRows, ...restOfPresenterDocumentDescriptor } = presenterDocumentDescriptor
     const rows = []
     const controllers = []
@@ -229,33 +294,54 @@ export default class TerminalPresenter {
     return { terminalDocument: terminalDocumentInstance, controllers }
   }
 
-  private static printPendingLogs(allPending?: boolean): boolean {
-    if (STDOUT_WRITE_ATTEMPTS.length > 0) {
-      while (STDOUT_WRITE_ATTEMPTS.length > 0) {
-        const currentEntry = STDOUT_WRITE_ATTEMPTS.shift()
-        let linesToPrint: string[] = []
+  private printConsoleCaptureEntry(entry: ConsoleCaptureEntry): void {
+    let linesToPrint: string[] = entry.subject.split('\n')
 
-        if (this.options.decorateConsole && !currentEntry.direct) {
-          const printerParts = currentEntry.printer.split('.')
-          const printerDecorationColor = DECORATION_COLORS[printerParts[0]] || chalk.cyan
-          const decoratedPrinter = `${printerParts[0]}.${printerDecorationColor(printerParts[1])}`
+    if (this.options.decorateConsole && !entry.direct) {
+      const printerParts = entry.printer.split('.')
+      const printerDecorationColor = DECORATION_COLORS[entry.type]
+      const decoratedPrinter = `${chalk.dim(printerParts[0] + '.')}${printerDecorationColor(printerParts[1])}`
 
-          const decoratedCaller = currentEntry.caller ? chalk.cyan(currentEntry.caller) : ''
-          const lineParts = currentEntry.line.replace(process.cwd() + '/', '').split('/')
-          lineParts[lineParts.length - 1] = chalk.cyan(lineParts[lineParts.length - 1])
-          const atLine = `at ${decoratedCaller} ${lineParts.join('/')}`
+      const decoratedCaller = entry.caller ? printerDecorationColor(entry.caller) : ''
+      const lineParts = this.options.relativeDecorationPath ? entry.line.replace(process.cwd() + '/', '').split('/') : entry.line.split('/')
+      const lastLinePart = lineParts.pop()
+      const atLine = `${chalk.dim('at')} ${decoratedCaller} ${this.options.relativeDecorationPath ? chalk.dim('.') : ''}${chalk.dim(
+        lineParts.join('/') + '/'
+      )}${printerDecorationColor(lastLinePart)}`
 
-          const decorationLine = `${decoratedPrinter} ${atLine}`
+      const decorationLine = `${decoratedPrinter} ${atLine}`
 
-          linesToPrint = [decorationLine, ...currentEntry.subject.split('\n')]
+      linesToPrint = (decorationLine + '\n' + entry.subject).split('\n')
+    }
+
+    const terminalColumns = getTerminalColumns()
+
+    for (let i = 0; i < linesToPrint.length; i++) {
+      const currentLine = linesToPrint[i]
+      const linesToClear = Math.ceil(currentLine.length / terminalColumns)
+
+      for (let j = 0; j < linesToClear + 1; j++) {
+        if (entry.type === 'stdout') {
+          WRITE_ORIGINAL_STDOUT(ansiEscapes.eraseLine)
         } else {
-          linesToPrint = currentEntry.subject.split('\n')
+          WRITE_ORIGINAL_STDERR(ansiEscapes.eraseLine)
         }
+      }
 
-        for (let i = 0; i < linesToPrint.length; i++) {
-          writeStdout(ansiEscapes.eraseLine)
-          writeStdout(linesToPrint[i] + '\n')
-        }
+      if (entry.type === 'stdout') {
+        WRITE_ORIGINAL_STDOUT(currentLine + '\n')
+      } else {
+        WRITE_ORIGINAL_STDERR(currentLine + '\n')
+      }
+    }
+  }
+
+  private printPendingConsoleCaptureEntries(allPending?: boolean): boolean {
+    if (this.consoleCaptureQueue.length > 0) {
+      while (this.consoleCaptureQueue.length > 0) {
+        const currentEntry = this.consoleCaptureQueue.shift()
+
+        this.printConsoleCaptureEntry(currentEntry)
 
         if (!allPending) break
       }

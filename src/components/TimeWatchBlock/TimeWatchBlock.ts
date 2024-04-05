@@ -1,10 +1,10 @@
 import { BlockControllerConfiguration } from '../../types'
-import { TimeWatchController, TimeWatchOptions } from './TimeWatch.types'
+import { TimeWatchBlockOptions, TimeWatchController } from './TimeWatchBlock.types'
 
 let ID = 0
 
-export function TimeWatch(options?: TimeWatchOptions): TimeWatchController {
-  const finalOptions: TimeWatchOptions = { initialTime: Date.now(), ...options }
+export function TimeWatchBlock(options?: TimeWatchBlockOptions): TimeWatchController {
+  const finalOptions: TimeWatchBlockOptions = { initialTime: Date.now(), ...options }
   const initialTime = finalOptions.initialTime
   const targetTime = finalOptions.targetTime
   let lastCalculatedTime = ''

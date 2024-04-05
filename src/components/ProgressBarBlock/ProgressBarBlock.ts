@@ -1,5 +1,5 @@
 import { BlockControllerConfiguration } from '../../types'
-import { ProgressBarController, ProgressBarOptions } from './ProgressBar.types'
+import { ProgressBarBlockOptions, ProgressBarController } from './ProgressBarBlock.types'
 
 let ID = 0
 
@@ -16,8 +16,8 @@ const BAR_CHARS = {
   }
 }
 
-export function ProgressBar(options?: ProgressBarOptions): ProgressBarController {
-  const finalOptions: ProgressBarOptions = { caption: 'percentage', captionSide: 'right', showCaption: true, style: 'solid', target: 100, ...options }
+export function ProgressBarBlock(options?: ProgressBarBlockOptions): ProgressBarController {
+  const finalOptions: ProgressBarBlockOptions = { caption: 'percentage', captionSide: 'right', showCaption: true, style: 'solid', target: 100, ...options }
   const target = Math.max(1, finalOptions.target)
   const barChars = BAR_CHARS[finalOptions.style]
   let progress = 0
