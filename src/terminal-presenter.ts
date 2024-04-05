@@ -144,8 +144,6 @@ export function present(): void {
 }
 
 export function print(subject: string): void {
-  if (!OPTIONS.enabled) return
-
   if (presenting) {
     consoleCaptureQueue.push({ subject, type: 'stdout', direct: true })
   } else {
