@@ -1,6 +1,6 @@
 import ansiStrip from 'strip-ansi'
 
-import { TerminalPresenter } from '../../../src'
+import { appendRealTimeDocument, configure, present } from '../../../src'
 import { TimeWatchBlock } from '../../../src/components/TimeWatchBlock'
 
 const WRITE_ORIGINAL_STDOUT_MOCK = jest.fn()
@@ -37,9 +37,11 @@ describe(TimeWatchBlock, (): void => {
     Date.now = () => 0
 
     const timeWatch = TimeWatchBlock()
-    const terminalPresenter = new TerminalPresenter({ enabled: true })
-    terminalPresenter.present()
-    terminalPresenter.appendRealTimeDocument('document-1', { rows: [{ blocks: [timeWatch] }] })
+
+    configure({ enabled: true })
+    present()
+
+    appendRealTimeDocument('document-1', { rows: [{ blocks: [timeWatch] }] })
 
     expect(WRITE_ORIGINAL_STDOUT_MOCK.mock.calls).toEqual([['cursorHide']])
     WRITE_ORIGINAL_STDOUT_MOCK.mockClear()

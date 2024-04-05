@@ -1,7 +1,6 @@
 import stripAnsi from 'strip-ansi'
 
-import { TerminalPresenter } from '../../src'
-import { ORIGINAL_STDERR } from '../../src/ORIGINAL_STDERR'
+import { configure, present } from '../../src'
 import { ORIGINAL_STDOUT } from '../../src/ORIGINAL_STDOUT'
 
 const WRITE_ORIGINAL_STDOUT_MOCK = jest.fn()
@@ -37,25 +36,23 @@ jest.spyOn(console, 'log').mockImplementation((subject) => {
   ORIGINAL_STDOUT.write(subject)
 })
 
-jest.spyOn(console, 'warn').mockImplementation((subject) => {
-  ORIGINAL_STDERR.write(subject)
-})
+describe('terminal-presenter', (): void => {
+  it('does not decorate the printed console outputs when disabled', async (): Promise<void> => {
+    configure({ enabled: true, decorateConsole: false })
+    present()
 
-describe(TerminalPresenter, (): void => {
-  it('hooks in the console and decorates the printed console outputs', async (): Promise<void> => {
-    if (!process.env.CI) return
+    let calls = WRITE_ORIGINAL_STDOUT_MOCK.mock.calls.map((call) => stripAnsi(call.join(' ')))
 
-    const terminalPresenter = new TerminalPresenter({ enabled: true })
-    terminalPresenter.present()
+    expect(calls).toEqual(['cursorHide'])
+
+    WRITE_ORIGINAL_STDOUT_MOCK.mockClear()
 
     console.log('This is a test message')
-    console.warn('This is a warn message')
-    terminalPresenter.print('This is another test message')
-    terminalPresenter.printDocument({ rows: [{ blocks: [{ text: 'This is a test message' }] }] })
 
-    jest.advanceTimersToNextTimer(10)
+    jest.advanceTimersToNextTimer()
 
-    // Extremely weird stuff happens on CI so we test the same in console-decoration.test.ts but with a simpler matcher
-    expect(WRITE_ORIGINAL_STDOUT_MOCK).toHaveBeenCalledTimes(224)
+    calls = WRITE_ORIGINAL_STDOUT_MOCK.mock.calls.map((call) => stripAnsi(call.join(' ')))
+
+    expect(calls).toEqual(['eraseLine', 'eraseLine', 'eraseLine', 'eraseLine', 'This is a test message\n'])
   })
 })

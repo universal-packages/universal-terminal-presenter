@@ -1,6 +1,6 @@
 import stripAnsi from 'strip-ansi'
 
-import { TerminalPresenter } from '../../src'
+import { configure, present, printDocument, print as printString } from '../../src'
 import { ORIGINAL_STDERR } from '../../src/ORIGINAL_STDERR'
 import { ORIGINAL_STDOUT } from '../../src/ORIGINAL_STDOUT'
 
@@ -41,12 +41,12 @@ jest.spyOn(console, 'warn').mockImplementation((subject) => {
   ORIGINAL_STDERR.write(subject)
 })
 
-describe(TerminalPresenter, (): void => {
+describe('terminal-presenter', (): void => {
   it('hooks in the console and decorates the printed console outputs', async (): Promise<void> => {
     if (process.env.CI) return
 
-    const terminalPresenter = new TerminalPresenter({ enabled: true })
-    terminalPresenter.present()
+    configure({ enabled: true })
+    present()
 
     let calls = WRITE_ORIGINAL_STDOUT_MOCK.mock.calls.map((call) => stripAnsi(call.join(' ')))
     let callsErr = WRITE_ORIGINAL_STDERR_MOCK.mock.calls.map((call) => stripAnsi(call.join(' ')))
@@ -84,7 +84,7 @@ describe(TerminalPresenter, (): void => {
       'eraseLine',
       'eraseLine',
       'eraseLine',
-      'console.mockConstructor [as log] at Object.<anonymous> .tests/TerminalPresenter/cosole-decoration.test.ts:60:13\n',
+      'console.mockConstructor [as log] at Object.<anonymous> .tests/terminal-presenter/console-decoration.test.ts:60:13\n',
       'eraseLine',
       'eraseLine',
       'eraseLine',
@@ -124,7 +124,7 @@ describe(TerminalPresenter, (): void => {
       'eraseLine',
       'eraseLine',
       'eraseLine',
-      'console.mockConstructor [as warn] at Object.<anonymous> .tests/TerminalPresenter/cosole-decoration.test.ts:99:13\n',
+      'console.mockConstructor [as warn] at Object.<anonymous> .tests/terminal-presenter/console-decoration.test.ts:99:13\n',
       'eraseLine',
       'eraseLine',
       'eraseLine',
@@ -135,7 +135,7 @@ describe(TerminalPresenter, (): void => {
     WRITE_ORIGINAL_STDOUT_MOCK.mockClear()
     WRITE_ORIGINAL_STDERR_MOCK.mockClear()
 
-    terminalPresenter.print('This is another test message')
+    printString('This is another test message')
 
     jest.advanceTimersToNextTimer()
 
@@ -147,7 +147,7 @@ describe(TerminalPresenter, (): void => {
     WRITE_ORIGINAL_STDOUT_MOCK.mockClear()
     WRITE_ORIGINAL_STDERR_MOCK.mockClear()
 
-    terminalPresenter.printDocument({ rows: [{ blocks: [{ text: 'This is a test message' }] }] })
+    printDocument({ rows: [{ blocks: [{ text: 'This is a test message' }] }] })
 
     jest.advanceTimersToNextTimer()
 

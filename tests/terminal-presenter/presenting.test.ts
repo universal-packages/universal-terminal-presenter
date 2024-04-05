@@ -1,4 +1,4 @@
-import { TerminalPresenter } from '../../src'
+import { appendRealTimeDocument, clearRealTimeDocuments, configure, prependRealTimeDocument, present, removeRealTimeDocument, restore, updateRealTimeDocument } from '../../src'
 
 const WRITE_ORIGINAL_STDOUT_MOCK = jest.fn()
 const WRITE_ORIGINAL_STDERR_MOCK = jest.fn()
@@ -35,37 +35,22 @@ jest.spyOn(console, 'warn').mockImplementation((subject) => {
 
 describe('TerminalPresenter', (): void => {
   it('present documents to the terminal', async (): Promise<void> => {
-    const terminalPresenter = new TerminalPresenter({ clear: true, enabled: true })
-    const terminalPresenter2 = new TerminalPresenter({ clear: true, enabled: true })
+    configure({ clear: true, enabled: true })
+    present()
 
-    terminalPresenter2.present()
-    terminalPresenter2.restore()
-    terminalPresenter2.captureConsole()
-    terminalPresenter2.releaseConsole()
-    terminalPresenter2.clearScreen()
-
-    terminalPresenter.present()
-    terminalPresenter.present()
-
-    terminalPresenter.appendRealTimeDocument('document-1', { rows: [{ blocks: [{ text: 'This is a test message' }] }] })
-
-    expect(WRITE_ORIGINAL_STDOUT_MOCK.mock.calls).toEqual([['cursorHide']])
-    expect(WRITE_ORIGINAL_STDERR_MOCK.mock.calls).toEqual([
-      ['TerminalPresenter has already been instantiated somewhere else. To avoid conflicts, new instances will not do anything.']
-    ])
-    WRITE_ORIGINAL_STDOUT_MOCK.mockClear()
-    WRITE_ORIGINAL_STDERR_MOCK.mockClear()
+    appendRealTimeDocument('document-1', { rows: [{ blocks: [{ text: 'This is a test message' }] }] })
 
     jest.advanceTimersToNextTimer()
 
     expect(WRITE_ORIGINAL_STDOUT_MOCK.mock.calls).toEqual([
+      ['cursorHide'],
       ['eraseLine'],
       ['This is a test message                                                          '],
       ['cursorMove(-999,0)']
     ])
     WRITE_ORIGINAL_STDOUT_MOCK.mockClear()
 
-    terminalPresenter.prependRealTimeDocument('document-2', { rows: [{ blocks: [{ text: 'This is second test message' }] }] })
+    prependRealTimeDocument('document-2', { rows: [{ blocks: [{ text: 'This is second test message' }] }] })
 
     jest.advanceTimersToNextTimer()
 
@@ -79,7 +64,7 @@ describe('TerminalPresenter', (): void => {
     ])
     WRITE_ORIGINAL_STDOUT_MOCK.mockClear()
 
-    terminalPresenter.updateRealTimeDocument('document-2', { rows: [{ blocks: [{ text: 'This is second test message alright' }] }] })
+    updateRealTimeDocument('document-2', { rows: [{ blocks: [{ text: 'This is second test message alright' }] }] })
 
     jest.advanceTimersToNextTimer()
 
@@ -91,21 +76,21 @@ describe('TerminalPresenter', (): void => {
     ])
     WRITE_ORIGINAL_STDOUT_MOCK.mockClear()
 
-    terminalPresenter.removeRealTimeDocument('document-1')
+    removeRealTimeDocument('document-1')
 
     jest.advanceTimersToNextTimer()
 
     expect(WRITE_ORIGINAL_STDOUT_MOCK.mock.calls).toEqual([['eraseDown'], ['cursorMove(-999,0)']])
     WRITE_ORIGINAL_STDOUT_MOCK.mockClear()
 
-    terminalPresenter.clearRealTimeDocuments()
+    clearRealTimeDocuments()
 
     jest.advanceTimersToNextTimer()
 
     expect(WRITE_ORIGINAL_STDOUT_MOCK.mock.calls).toEqual([])
     WRITE_ORIGINAL_STDOUT_MOCK.mockClear()
 
-    terminalPresenter.restore()
+    restore()
 
     jest.advanceTimersToNextTimer()
 

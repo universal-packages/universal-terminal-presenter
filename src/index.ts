@@ -1,4 +1,4 @@
-export { default as TerminalPresenter } from './TerminalPresenter'
+export * from './terminal-presenter'
 export * from './types'
 export * from './components/LoadingBlock'
 export * from './components/ProgressBarBlock'

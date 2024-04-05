@@ -1,6 +1,6 @@
 import ansiStrip from 'strip-ansi'
 
-import { ProgressBarBlock, TerminalPresenter } from '../../src'
+import { ProgressBarBlock, appendRealTimeDocument, configure, present } from '../../src'
 
 const WRITE_ORIGINAL_STDOUT_MOCK = jest.fn()
 const WRITE_ORIGINAL_STDERR_MOCK = jest.fn()
@@ -34,9 +34,11 @@ jest.useFakeTimers()
 describe(ProgressBarBlock, (): void => {
   it('present components that can be animated', async (): Promise<void> => {
     const progressBar = ProgressBarBlock()
-    const terminalPresenter = new TerminalPresenter({ enabled: true })
-    terminalPresenter.present()
-    terminalPresenter.appendRealTimeDocument('document-1', { rows: [{ blocks: [progressBar] }] })
+
+    configure({ enabled: true })
+    present()
+
+    appendRealTimeDocument('document-1', { rows: [{ blocks: [progressBar] }] })
 
     expect(WRITE_ORIGINAL_STDOUT_MOCK.mock.calls).toEqual([['cursorHide']])
     WRITE_ORIGINAL_STDOUT_MOCK.mockClear()

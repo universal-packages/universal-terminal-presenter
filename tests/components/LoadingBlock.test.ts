@@ -1,6 +1,6 @@
 import ansiStrip from 'strip-ansi'
 
-import { LoadingBlock, TerminalPresenter } from '../../src'
+import { LoadingBlock, appendRealTimeDocument, configure, present } from '../../src'
 
 const WRITE_ORIGINAL_STDOUT_MOCK = jest.fn()
 const WRITE_ORIGINAL_STDERR_MOCK = jest.fn()
@@ -34,9 +34,10 @@ jest.useFakeTimers()
 describe(LoadingBlock, (): void => {
   it('present components that can be animated', async (): Promise<void> => {
     const loadingBlock = LoadingBlock()
-    const terminalPresenter = new TerminalPresenter({ enabled: true })
-    terminalPresenter.present()
-    terminalPresenter.appendRealTimeDocument('document-1', { rows: [{ blocks: [loadingBlock] }] })
+
+    configure({ enabled: true })
+    present()
+    appendRealTimeDocument('document-1', { rows: [{ blocks: [loadingBlock] }] })
 
     expect(WRITE_ORIGINAL_STDOUT_MOCK.mock.calls).toEqual([['cursorHide']])
     WRITE_ORIGINAL_STDOUT_MOCK.mockClear()

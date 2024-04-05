@@ -12,24 +12,22 @@ Terminal document presentation system.
 npm install @universal-packages/terminal-presenter
 ```
 
-## TerminalPresenter
+## Getting started
 
 Once started it hooks into the printing capabilities of the application in order to present real time updates to the terminal.
 
 ```typescript
-import { TerminalPresenter } from '@universal-packages/terminal-presenter'
+import { appendRealTimeDocument, configure, present } from '@universal-packages/terminal-presenter'
 
-const terminalPresenter = new TerminalPresenter({ clear: true })
+configure({ clear: true })
 
-terminalPresenter.appendRealTimeDocument('document-1', {
+appendRealTimeDocument('document-1', {
   rows: [
     {
       blocks: [{ text: 'Hello World!!' }]
     }
   ]
-})
-
-terminalPresenter.appendRealTimeDocument('document-2', {
+}).appendRealTimeDocument('document-2', {
   rows: [
     {
       blocks: [{ text: 'Some more real time info' }]
@@ -37,10 +35,16 @@ terminalPresenter.appendRealTimeDocument('document-2', {
   ]
 })
 
-terminalPresenter.preset()
+preset()
 ```
 
-### Options
+### Global Methods
+
+#### `configure(options: Options)`
+
+Configures the terminal presenter.
+
+##### Options
 
 - **`clear`** `boolean`
   Clears the terminal before start presenting documents.
@@ -57,8 +61,6 @@ terminalPresenter.preset()
 - **`relativeDecorationPath`** `boolean` `default: true`
   Reduces where the logs are coming from to a relative path to the project root.
 
-### Static Methods
-
 #### `present()`
 
 Starts the terminal presenter. This will start presenting all documents and hook into the console to be decorated.
@@ -67,7 +69,7 @@ Starts the terminal presenter. This will start presenting all documents and hook
 
 Stops the terminal presenter. This will stop presenting all documents and unhook from the console.
 
-#### `print(subject: string)`
+#### `printString(subject: string)`
 
 Use this to print anything above the real time documents. This will be printed directly and will not be captured the same as console.log ones.
 
