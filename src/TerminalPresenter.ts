@@ -12,6 +12,12 @@ import { BlockController, ConsoleCaptureEntry, DocumentEntry, PresenterDocumentD
 export const DECORATION_COLORS = { stdout: chalk.cyan, stderr: chalk.red }
 
 export default class TerminalPresenter {
+  public static get firstInstance(): TerminalPresenter {
+    return TerminalPresenter.internalFirstInstance
+  }
+  private static alreadyInstantiated = false
+  private static internalFirstInstance: TerminalPresenter
+
   public readonly options: TerminalPresenterOptions
 
   private documents: Record<string, DocumentEntry> = {}
@@ -24,7 +30,6 @@ export default class TerminalPresenter {
   private restoring = false
   private resolveRestore: (...args: any[]) => void
 
-  private static alreadyInstantiated = false
   private invalid = false
 
   private framesPerSecond = 30
@@ -72,6 +77,7 @@ export default class TerminalPresenter {
       console.warn('TerminalPresenter has already been instantiated somewhere else. To avoid conflicts, new instances will not do anything.')
     } else {
       TerminalPresenter.alreadyInstantiated = true
+      TerminalPresenter.internalFirstInstance = this
     }
   }
 
