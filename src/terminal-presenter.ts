@@ -143,7 +143,7 @@ export function present(): void {
   }, frameDuration)
 }
 
-export function print(subject: string): void {
+export function printString(subject: string): void {
   if (presenting) {
     consoleCaptureQueue.push({ subject, type: 'stdout', direct: true })
   } else {
@@ -154,7 +154,7 @@ export function print(subject: string): void {
 export function printDocument(documentDescriptor: DocumentDescriptor): void {
   const document = new TerminalDocument()
   document.describe({ ...documentDescriptor, width: getTerminalColumns() })
-  print(document.result)
+  printString(document.result)
 }
 
 export function releaseConsole(): void {

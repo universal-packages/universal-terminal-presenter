@@ -1,4 +1,4 @@
-import { configure, present, print, printDocument } from '../../src'
+import { configure, present, printString, printDocument } from '../../src'
 import { ORIGINAL_STDERR } from '../../src/ORIGINAL_STDERR'
 import { ORIGINAL_STDOUT } from '../../src/ORIGINAL_STDOUT'
 
@@ -48,7 +48,7 @@ describe('terminal-presenter', (): void => {
 
     console.log('This is a test message')
     console.warn('This is a warn message')
-    print('This is another test message')
+    printString('This is another test message')
     printDocument({ rows: [{ blocks: [{ text: 'This is a test message' }] }] })
 
     jest.advanceTimersToNextTimer(10)

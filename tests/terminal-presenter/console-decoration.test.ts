@@ -1,6 +1,6 @@
 import stripAnsi from 'strip-ansi'
 
-import { configure, present, printDocument, print as printString } from '../../src'
+import { configure, present, printDocument, printString } from '../../src'
 import { ORIGINAL_STDERR } from '../../src/ORIGINAL_STDERR'
 import { ORIGINAL_STDOUT } from '../../src/ORIGINAL_STDOUT'
 
