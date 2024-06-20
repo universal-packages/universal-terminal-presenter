@@ -56,7 +56,7 @@ describe(LoadingBlock, (): void => {
 
     expect(WRITE_ORIGINAL_STDOUT_MOCK.mock.calls.map((call) => ansiStrip(call[0]))).toEqual([
       'eraseLine',
-      '⣯                                                                               ',
+      '⡿                                                                               ',
       'cursorMove(-999,0)'
     ])
     WRITE_ORIGINAL_STDOUT_MOCK.mockClear()

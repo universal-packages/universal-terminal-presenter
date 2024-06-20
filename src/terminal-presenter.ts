@@ -15,7 +15,7 @@ export const OPTIONS: TerminalPresenterOptions = {
   clear: false,
   enabled: ORIGINAL_STDOUT.isTTY && process.env.NODE_ENV !== 'test',
   decorateConsole: true,
-  framesPerSecond: 30,
+  framesPerSecond: 5,
   relativeDecorationPath: true
 }
 
@@ -29,7 +29,7 @@ let consoleCaptured = false
 let restoring = false
 let resolveRestore: (...args: any[]) => void
 
-let framesPerSecond = 30
+let framesPerSecond = 5
 let frameDuration = 1000 / framesPerSecond
 let frame = 0
 let animationInterval: NodeJS.Timeout
